@@ -17,3 +17,21 @@
   justify-items: space-between;
   align-content: space-between;
 }
+/* App container to manage layout */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  height: 100vh; /* Full height of the viewport */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Content section to allow scrolling */
+.content {
+  height: 100%;
+  width: 100%;
+  overflow-y: auto; /* Enable scrolling for content */
+  padding-bottom: 80px;
+}

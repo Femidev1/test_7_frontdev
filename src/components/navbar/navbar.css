@@ -1,13 +1,17 @@
-.navbar{
+.navbar {
     display: flex;
     flex-direction: row;
     width: 100%;
-    height: fit-content;
-    align-items: space-between;
-    justify-content: space-between;
+    align-items: center; /* Center items vertically */
+    justify-content: space-around; /* Equal spacing between items */
     box-sizing: border-box;
-    padding: 12px 16px 12px 16px;
+    padding: 40px 0; /* Adjust top and bottom padding without affecting children */
+    background-color: black; /* Ensure the navbar has a clear background */
+    position: fixed; /* Keep it fixed at the bottom */
+    bottom: 0;
+    z-index: 100; /* Keep it above other elements */
 }
+
 
 .icon{
     background-color: rgb(255, 255, 255);
