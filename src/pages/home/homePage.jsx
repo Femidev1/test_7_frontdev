@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./homePage.css";
 import duck from "../../assets/character1.png";
-import { UserContext } from "../../contexts/UserContext";
+import TapTracker from "../../components/tracker/tracker";
 
 /**
  * Utility function to format large numbers into a compact string.
@@ -17,21 +17,24 @@ const formatNumber = (num) => {
 
   const units = ["", "K", "M", "B", "T", "Q"];
   const tier = Math.floor(Math.log10(Math.abs(num)) / 3);
-  
+
   if (tier === 0) return num.toString();
 
   const unit = units[tier] || "Q"; // Default to "Q" if tier exceeds defined units
   const scaled = num / Math.pow(1000, tier);
 
   // Ensure two decimal places, but remove trailing zeros
-  const formatted = scaled.toFixed(2).replace(/\.00$/, "").replace(/(\.[0-9])0$/, "$1");
+  const formatted = scaled
+    .toFixed(2)
+    .replace(/\.00$/, "")
+    .replace(/(\.[0-9])0$/, "$1");
 
   return `${formatted}${unit}`;
 };
 
 const Home = () => {
   // -------------------------------------
-  //        GET TELEGRAM ID FROM URL
+  //         GET TELEGRAM ID FROM URL
   // -------------------------------------
   const { telegramId } = useParams();
   const navigate = useNavigate();
@@ -41,18 +44,18 @@ const Home = () => {
   // -------------------------------------
   const tapLimit = 100;                    // Maximum tap limit
   const boostCooldownSeconds = 60;         // 60-second cooldown for boost
-  const miningDurationMs = 5 * 60 * 1000;  // 5 minutes
-  const miningReward = 20;                 // Points awarded after mining
+  const miningDurationMs = 1 * 60 * 1000;  // 1 minute
+  const miningReward = 20;                // Points awarded after mining
   const refillRate = tapLimit / 60;        // e.g., 100 taps in 60s => ~1.66 taps/s
 
   // -------------------------------------
   //             LOCAL STATE
   // -------------------------------------
 
-  // 1) Instead of 0, start as null to avoid overwriting DB on mount
+  // Instead of 0, start as null to avoid overwriting DB on mount
   const [points, setPoints] = useState(null);
 
-  // The player's display name from the DB (username / first + last)
+  // The player's display name from the DB (username or first+last)
   const [playerName, setPlayerName] = useState("Player Name");
 
   // Tapping
@@ -89,10 +92,10 @@ const Home = () => {
         if (!res.ok) throw new Error("Failed to fetch user data");
         const user = await res.json();
 
-        // 1) Set the player's points from DB (don't overwrite if null)
+        // Set the player's points from DB (don't overwrite if null)
         setPoints(user.points ?? 0);
 
-        // 2) Construct a display name from username or fallback
+        // Construct a display name from username or fallback to first+last
         let displayName = user.username && user.username.trim()
           ? user.username.trim()
           : "";
@@ -111,7 +114,7 @@ const Home = () => {
   }, [telegramId]);
 
   // -------------------------------------
-  //     UPDATE POINTS IN DATABASE
+  //    UPDATE POINTS IN DATABASE
   // -------------------------------------
   const updatePointsInDatabase = async (updatedPoints) => {
     if (!telegramId) return; // Must have ID
@@ -136,16 +139,15 @@ const Home = () => {
   }, [points]);
 
   // -------------------------------------
-  //       LEVEL PROGRESSION LOGIC
+  //        LEVEL PROGRESSION LOGIC
   // -------------------------------------
-  // If your user might have more than 700 points, consider adjusting these:
   const levels = [
-    { min: 0,      max: 100 },
-    { min: 101,    max: 1000 },
-    { min: 1001,   max: 5000 },
-    { min: 5001,   max: 10000 },
-    { min: 10001,  max: 50000 },
-    { min: 50001,  max: 100000 },
+    { min: 0, max: 100 },
+    { min: 101, max: 1000 },
+    { min: 1001, max: 5000 },
+    { min: 5001, max: 10000 },
+    { min: 10001, max: 50000 },
+    { min: 50001, max: 100000 },
     { min: 100001, max: 500000 },
     { min: 500001, max: 1000000 },
     { min: 1000001, max: 10000000 },
@@ -167,7 +169,7 @@ const Home = () => {
     return `linear-gradient(0deg, ${randomColor()}, ${randomColor()})`;
   };
 
-  // If user surpasses the level, move them up
+  // If the user surpasses the level, move them up & update gradient
   useEffect(() => {
     if (levelProgress >= 100 && points !== null) {
       setPoints(currentLevel.max + 1);
@@ -208,7 +210,8 @@ const Home = () => {
   // On mount: fast-forward refill from lastRefillTime
   useEffect(() => {
     const now = Date.now();
-    const lastRefillTime = parseInt(localStorage.getItem("lastRefillTime") || "0", 10) || now;
+    const lastRefillTime =
+      parseInt(localStorage.getItem("lastRefillTime") || "0", 10) || now;
     const diffMs = now - lastRefillTime;
 
     if (diffMs > 0) {
@@ -352,7 +355,7 @@ const Home = () => {
           <div className="playerpoints">
             <h1>
               {points === null
-                ? "Loading..." // or 0, or some spinner
+                ? "Loading..."
                 : formatNumber(points)}
             </h1>
           </div>
