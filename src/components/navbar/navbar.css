@@ -5,13 +5,22 @@
     align-items: center; /* Center items vertically */
     justify-content: space-around; /* Equal spacing between items */
     box-sizing: border-box;
-    padding: 40px 0; /* Adjust top and bottom padding without affecting children */
+    padding: 16px 0; /* Adjust top and bottom padding without affecting children */
     background-color: black; /* Ensure the navbar has a clear background */
     position: fixed; /* Keep it fixed at the bottom */
     bottom: 0;
     z-index: 100; /* Keep it above other elements */
+    text-decoration: none;
 }
 
+.nav-links{
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: fit-content;
+    align-items: center;
+    justify-content: space-between;
+}
 
 .icon{
     background-color: rgb(255, 255, 255);

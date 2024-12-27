@@ -1,37 +1,48 @@
-import React, { useState } from "react";
+// src/App.jsx
+import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "./App.css";
+
 import Navbar from "./components/navbar/navbar";
+import Loading from "./pages/loadingpage/loadingPage";
 import Home from "./pages/home/homePage";
 import Store from "./pages/store/storePage";
 import Leaderboard from "./pages/leaderboard/leaderboardPage";
-import Quest from "./pages/quests/questsPage";
+import Quests from "./pages/quests/questsPage";
 import Friends from "./pages/friends/friendsPage";
+import { UserProvider } from "./contexts/UserContext";
 
 function App() {
-  const [points, setPoints] = useState(0); // Step 1: Initialize points
-
   return (
     <div className="app-container">
-      <Router>
-        {/* Main content with scrolling */}
-        <div className="content">
-          <Routes>
-            {/* Route for the Home page */}
-            <Route path="/" element={<Home points={points} setPoints={setPoints} />} />
-            {/* Route for the Store page */}
-            <Route path="/store" element={<Store />} />
-            {/* Route for the Leaderboard page */}
-            <Route path="/leaderboard" element={<Leaderboard />} />
-            {/* Route for the Quest page */}
-            <Route path="/quest" element={<Quest />} />
-            {/* Route for the Friends page */}
-            <Route path="/friends" element={<Friends />} />
-          </Routes>
-        </div>
-        {/* Fixed Navigation Bar */}
-        <Navbar/>
-      </Router>
+      <UserProvider>
+        <Router>
+          <div className="content">
+            <Routes>
+              {/* 
+                 Default route: "/" => shows LoadingPage 
+                 which tries to fetch or figure out user,
+                 then redirects to /home/:telegramId
+              */}
+              <Route path="/" element={<Loading />} />
+
+              {/* Main Home route with telegramId param */}
+              <Route path="/home/:telegramId" element={<Home />} />
+
+              {/* Leaderboard route with telegramId param */}
+              <Route path="/leaderboard/:telegramId" element={<Leaderboard />} />
+
+              {/* Quests route with telegramId param */}
+              <Route path="/quests/:telegramId" element={<Quests />} />
+
+              {/* Other pages without telegramId */}
+              <Route path="/store" element={<Store />} />
+              <Route path="/friends" element={<Friends />} />
+            </Routes>
+          </div>
+          <Navbar />
+        </Router>
+      </UserProvider>
     </div>
   );
 }

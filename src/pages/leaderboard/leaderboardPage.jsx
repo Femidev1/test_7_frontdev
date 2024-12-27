@@ -1,86 +1,129 @@
+// src/pages/leaderboard/leaderboardPage.jsx
 import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import "./leaderboardPage.css";
 
-const Leaderboard = () => {
-  const [users, setUsers] = useState([]); // Leaderboard users
-  const [currentUser, setCurrentUser] = useState(null); // Current user info
-  const [loading, setLoading] = useState(true); // Loading state
+/**
+ * Utility function to format large numbers into a compact string.
+ * E.g., 1021000 becomes "1.02M".
+ *
+ * @param {number} num - The number to format.
+ * @returns {string} - The formatted number string.
+ */
+const formatNumber = (num) => {
+  if (num === null || num === undefined) return "0";
 
+  const units = ["", "K", "M", "B", "T", "Q"];
+  const tier = Math.floor(Math.log10(Math.abs(num)) / 3);
+  
+  if (tier === 0) return num.toString();
+
+  const unit = units[tier] || "Q"; // Default to "Q" if tier exceeds defined units
+  const scaled = num / Math.pow(1000, tier);
+
+  // Ensure two decimal places, but remove trailing zeros
+  const formatted = scaled.toFixed(2).replace(/\.00$/, "").replace(/(\.[0-9])0$/, "$1");
+
+  return `${formatted}${unit}`;
+};
+
+const Leaderboard = () => {
+  const { telegramId } = useParams(); // Retrieve telegramId from URL
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("all"); // Assuming similar filter functionality
+
+  // Fetch leaderboard data from backend
   useEffect(() => {
-    // Fetch leaderboard data
     const fetchLeaderboard = async () => {
       try {
-        // Fetch top users
-        const response = await fetch("http://localhost:5050/api/leaderboard?limit=10&page=1");
+        const response = await fetch("http://localhost:5050/api/leaderboard");
+        if (!response.ok) {
+          throw new Error("Failed to fetch leaderboard data");
+        }
         const data = await response.json();
-        setUsers(data);
-
-        // Fetch current user data (replace with actual Telegram ID)
-        const currentUserResponse = await fetch("http://localhost:5050/api/user/1297266722");
-        const currentUserData = await currentUserResponse.json();
-        setCurrentUser(currentUserData);
-
+        setLeaderboardData(data);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching leaderboard:", error);
+        setLoading(false);
       }
     };
 
     fetchLeaderboard();
   }, []);
 
-  if (loading) return <div className="loading">Loading...</div>;
+  // Optionally, implement filtering if your backend supports it
+  // For simplicity, this example assumes all data is fetched and filtered client-side
+
+  if (loading) {
+    return <div className="loading">Loading Leaderboard...</div>;
+  }
 
   return (
-    <div className="leaderboard">
-      {/* Upper Section */}
-      <div className="upper">
-        <div className="header">
-          <div className="item"></div>
-          <div className="title">LEADERS</div>
-        </div>
+    <div className="leaderboard-page">
+      {/* Header */}
+      <div className="leaderboard-header">
+        <div className="header-icon"></div>
+        <div className="header-title">Leaderboard</div>
+      </div>
 
-        {/* Filter Bar */}
-        <div className="filter-bar">Filter Bar with filters by galaxy</div>
+      {/* Filter Bar */}
+      <div className="filter-bar">
+        <button
+          className={`filter-button ${filter === "all" ? "active" : ""}`}
+          onClick={() => setFilter("all")}
+        >
+          All
+        </button>
+        <button
+          className={`filter-button ${filter === "external" ? "active" : ""}`}
+          onClick={() => setFilter("external")}
+        >
+          External
+        </button>
+        <button
+          className={`filter-button ${filter === "in-game" ? "active" : ""}`}
+          onClick={() => setFilter("in-game")}
+        >
+          In-Game
+        </button>
       </div>
 
       {/* Leaderboard List */}
       <div className="leaderboard-list">
-        {users.map((user, index) => (
-          <div
-            key={user.telegramId}
-            className={`leaderboard-item ${
-              currentUser?.telegramId === user.telegramId ? "current-user" : ""
-            }`}
-          >
-            <div className="user-avatar">
-              {/* User avatar or placeholder */}
-              <div className="placeholder-avatar"></div>
-            </div>
-            <div className="user-info">
-              <span className="user-name">{user.username || "leader Name"}</span>
-              <span className="user-tokens">{user.points || 0} Tokens</span>
-            </div>
-            <div className="user-position">#{index + 1}</div>
-          </div>
-        ))}
-      </div>
+        {leaderboardData
+          .filter((player) => {
+            if (filter === "all") return true;
+            return player.type === filter;
+          })
+          .map((player, index) => (
+            <div
+              className={`leaderboard-item ${
+                player.telegramId === telegramId ? "current-user" : ""
+              }`}
+              key={player.telegramId}
+            >
+              {/* User Avatar */}
+              <div className="user-avatar">
+                {player.avatarURL ? (
+                  <img src={player.avatarURL} alt={`${player.username}'s avatar`} />
+                ) : (
+                  <div className="placeholder-avatar"></div>
+                )}
+              </div>
 
-      {/* Highlight Current User */}
-      {currentUser && (
-        <div className="current-user-section">
-          <div className="current-user-highlight">
-            <div className="user-avatar">
-              <div className="placeholder-avatar"></div>
+              {/* User Info */}
+              <div className="user-info">
+                <div className="user-name">{player.username || "Player Name"}</div>
+                <div className="user-tokens">{formatNumber(player.points)} Tokens</div>
+              </div>
+
+              {/* User Position */}
+              <div className="user-position">{index + 1}</div>
             </div>
-            <div className="user-info">
-              <span className="user-name">{currentUser.username || "Player Name (User)"}</span>
-              <span className="user-tokens">{currentUser.points || 0} Tokens</span>
-            </div>
-            <div className="user-position">Your Position</div>
-          </div>
-        </div>
-      )}
+          ))}
+      </div>
     </div>
   );
 };
