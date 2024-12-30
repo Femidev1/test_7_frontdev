@@ -1,0 +1,103 @@
+/* General Styling */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: black;
+    color: white;
+  }
+  
+  /* Friends Page */
+  .friends-page {
+    padding: 20px;
+  }
+  
+  /* Header Section */
+  .header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .friends-count {
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
+  .reward-banner {
+    background-color: #333;
+    padding: 15px;
+    border-radius: 10px;
+    margin: 10px 0;
+  }
+  
+  .reward-banner p {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0;
+  }
+  
+  .reward-banner span {
+    font-size: 14px;
+    margin-top: 5px;
+    display: block;
+  }
+  
+  /* Friends List */
+  .friends-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .friend-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #444;
+    padding: 10px;
+    border-radius: 10px;
+  }
+  
+  .friend-avatar .avatar-placeholder {
+    width: 50px;
+    height: 50px;
+    background-color: gray;
+    border-radius: 50%;
+  }
+  
+  .friend-info h3 {
+    margin: 0;
+    font-size: 16px;
+  }
+  
+  .friend-info p {
+    margin: 5px 0 0;
+    font-size: 14px;
+  }
+  
+  .friend-galaxy-level p {
+    margin: 0;
+    font-size: 14px;
+  }
+  
+  /* Bottom Navigation */
+  .navbar {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    background-color: #222;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+  }
+  
+  .nav-button {
+    color: white;
+    background: none;
+    border: none;
+    font-size: 16px;
+  }
+  
+  .nav-button.active {
+    font-weight: bold;
+    border-bottom: 2px solid white;
+  }

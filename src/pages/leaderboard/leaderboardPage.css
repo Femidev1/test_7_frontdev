@@ -65,7 +65,7 @@
   flex-direction: column;
   gap: 12px;
   padding: 10px 0;
-
+  box-sizing: border-box;
   /* If you have a bottom nav or want to avoid overlap,
      add extra bottom padding. Adjust as needed. */
   padding-bottom: 130px;
@@ -137,11 +137,11 @@
 
 /* ====================== Current User Card ====================== */
 .current-user-card {
-  /* If you want it pinned at the bottom, fix its position */
   position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
+  bottom: 96px;
+  left: 50%; /* Center horizontally */
+  transform: translateX(-50%); /* Adjust position back by 50% of the width */
+  width: 92%;
 
   display: flex;
   align-items: center;
@@ -151,7 +151,9 @@
   box-sizing: border-box;
 
   background-color: #222; /* Dark background */
-  border-top: 2px solid gold;
+  border: 2px solid gold;
+
+  border-radius: 8px;
 
   /* Optionally add a higher z-index to ensure it’s above other content */
   z-index: 10;

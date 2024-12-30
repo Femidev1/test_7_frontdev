@@ -6,7 +6,7 @@ import "./App.css";
 import Navbar from "./components/navbar/navbar";
 import Loading from "./pages/loadingpage/loadingPage";
 import Home from "./pages/home/homePage";
-import Store from "./pages/store/storePage";
+import Shop from "./pages/store/shopPage";
 import Leaderboard from "./pages/leaderboard/leaderboardPage";
 import Quests from "./pages/quests/questsPage";
 import Friends from "./pages/friends/friendsPage";
@@ -36,7 +36,7 @@ function App() {
               <Route path="/quests/:telegramId" element={<Quests />} />
 
               {/* Other pages without telegramId */}
-              <Route path="/store" element={<Store />} />
+              <Route path="/shop" element={<Shop />} />
               <Route path="/friends" element={<Friends />} />
             </Routes>
           </div>

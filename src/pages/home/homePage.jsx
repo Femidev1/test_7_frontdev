@@ -8,12 +8,18 @@ import TapTracker from "../../components/tracker/tracker";
 /**
  * Utility function to format large numbers into a compact string.
  * E.g., 1021000 becomes "1.02M".
+ * Numbers less than 1,000 are shown as whole numbers (rounded up).
  *
  * @param {number} num - The number to format.
  * @returns {string} - The formatted number string.
  */
 const formatNumber = (num) => {
   if (num === null || num === undefined) return "0";
+
+  if (num < 1000) {
+    // Numbers less than 1,000 are rounded up to whole numbers
+    return Math.ceil(num).toString();
+  }
 
   const units = ["", "K", "M", "B", "T", "Q"];
   const tier = Math.floor(Math.log10(Math.abs(num)) / 3);
@@ -47,6 +53,7 @@ const Home = () => {
   const miningDurationMs = 1 * 60 * 1000;  // 1 minute
   const miningReward = 20;                // Points awarded after mining
   const refillRate = tapLimit / 60;        // e.g., 100 taps in 60s => ~1.66 taps/s
+  const tapTimeoutRef = useRef(null);
 
   // -------------------------------------
   //             LOCAL STATE
@@ -76,10 +83,15 @@ const Home = () => {
   // Mining
   const [mining, setMining] = useState(false);
   const [miningProgress, setMiningProgress] = useState(0);
+  
 
   // Gradient for the level/planet progress bar
   const [gradient, setGradient] = useState("linear-gradient(0deg, #00c6ff, #0072ff)");
 
+
+    // Refs for intervals and timeouts
+  const intervalRef = useRef(null);
+  const timeoutRef = useRef(null);
   // -------------------------------------
   //         FETCH USER DATA
   // -------------------------------------
@@ -116,27 +128,38 @@ const Home = () => {
   // -------------------------------------
   //    UPDATE POINTS IN DATABASE
   // -------------------------------------
-  const updatePointsInDatabase = async (updatedPoints) => {
-    if (!telegramId) return; // Must have ID
+  let isUpdatingPoints = false; // Add a flag to prevent multiple updates
 
+  const updatePointsInDatabase = async (increment) => {
+    if (!telegramId || isUpdatingPoints) return; // Prevent multiple updates
+    isUpdatingPoints = true;
+  
     try {
       const res = await fetch(`http://localhost:5050/api/user/${telegramId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ points: updatedPoints }),
+        body: JSON.stringify({ points: increment }),
       });
+  
       if (!res.ok) throw new Error("Failed to update points");
+  
+      const data = await res.json();
+      console.log("Updated Points Successfully:", data.totalPoints);
+      return data.totalPoints;
     } catch (err) {
       console.error("Error updating points in DB:", err);
+    } finally {
+      isUpdatingPoints = false; // Reset flag
     }
   };
 
-  // Whenever `points` changes (and is not null), post to the backend
-  useEffect(() => {
-    if (points !== null) {
-      updatePointsInDatabase(points);
-    }
-  }, [points]);
+ /* // Whenever `points` changes (and is not null), post to the backend
+useEffect(() => {
+  if (points !== null && points !== undefined) {
+    const increment = 1; // Adjust increment value as needed
+    updatePointsInDatabase(increment);
+  }
+}, [points]); // Ensure this only runs when `points` changes */
 
   // -------------------------------------
   //        LEVEL PROGRESSION LOGIC
@@ -253,89 +276,220 @@ const Home = () => {
   // -------------------------------------
   //         MINING LOGIC
   // -------------------------------------
-  useEffect(() => {
-    const miningDataStr = localStorage.getItem("miningData");
-    if (miningDataStr) {
-      try {
-        const { isMining, startTime, rewarded } = JSON.parse(miningDataStr);
-        if (isMining && !rewarded) {
-          const elapsed = Date.now() - startTime;
-          if (elapsed >= miningDurationMs) {
-            // Mining finished; reward user
-            setPoints((prev) => (prev !== null ? prev + miningReward : miningReward));
-            localStorage.setItem(
-              "miningData",
-              JSON.stringify({ isMining: false, startTime: 0, rewarded: true })
-            );
-          } else {
-            // Resume in-progress
-            setMining(true);
-            setMiningProgress((elapsed / miningDurationMs) * 100);
-          }
-        }
-      } catch (err) {
-        console.warn("Error parsing miningData from localStorage:", err);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    let interval;
-    if (mining) {
-      interval = setInterval(() => {
-        const miningDataStr = localStorage.getItem("miningData");
-        if (!miningDataStr) return;
-
-        const { startTime, rewarded } = JSON.parse(miningDataStr) || {};
-        if (!startTime || rewarded) {
-          clearInterval(interval);
-          return;
-        }
-
-        const elapsed = Date.now() - startTime;
-        if (elapsed >= miningDurationMs) {
-          // Done mining
-          setPoints((prev) => (prev !== null ? prev + miningReward : miningReward));
-          setMining(false);
-          setMiningProgress(0);
-          localStorage.setItem(
-            "miningData",
-            JSON.stringify({ isMining: false, startTime: 0, rewarded: true })
-          );
-          clearInterval(interval);
-        } else {
-          const progress = (elapsed / miningDurationMs) * 100;
-          setMiningProgress(progress);
-        }
-      }, 1000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [mining]);
-
-  const startMining = () => {
+  const startMining = async () => {
     if (!mining) {
-      setMining(true);
-      setMiningProgress(0);
+      // Clear any existing intervals or timeouts to prevent overlaps
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      setMining(true); // Start mining
+      setMiningProgress(0); // Reset progress
+
+      const miningStartTime = Date.now();
       localStorage.setItem(
         "miningData",
         JSON.stringify({
           isMining: true,
-          startTime: Date.now(),
-          rewarded: false,
+          startTime: miningStartTime,
+          progress: 0,
         })
       );
+
+      // Update progress at regular intervals
+      intervalRef.current = setInterval(() => {
+        const elapsed = Date.now() - miningStartTime;
+        const progress = Math.min((elapsed / miningDurationMs) * 100, 100);
+
+        setMiningProgress(progress);
+        localStorage.setItem(
+          "miningData",
+          JSON.stringify({
+            isMining: true,
+            startTime: miningStartTime,
+            progress,
+          })
+        );
+
+        if (progress >= 100) {
+          clearInterval(intervalRef.current); // Stop the interval when progress is complete
+        }
+      }, 100); // Update progress every 100ms
+
+      // Finalize mining after duration
+      timeoutRef.current = setTimeout(async () => {
+        clearInterval(intervalRef.current); // Clear the interval after timeout
+        try {
+          const res = await fetch(`http://localhost:5050/api/mine`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ telegramId }),
+          });
+
+          if (!res.ok) throw new Error("Failed to complete mining");
+
+          const data = await res.json();
+          setPoints((prev) => (prev !== null ? prev + data.minedPoints : data.minedPoints));
+          setMining(false);
+          setMiningProgress(0); // Reset progress for the next mining session
+
+          // Clear mining data from LocalStorage
+          localStorage.setItem(
+            "miningData",
+            JSON.stringify({ isMining: false, startTime: 0, progress: 0 })
+          );
+        } catch (err) {
+          console.error("Error completing mining:", err);
+          alert("An error occurred while completing mining. Please try again.");
+          setMining(false);
+          setMiningProgress(0); // Reset progress on error
+
+          // Clear mining data from LocalStorage in case of error
+          localStorage.setItem(
+            "miningData",
+            JSON.stringify({ isMining: false, startTime: 0, progress: 0 })
+          );
+        }
+      }, miningDurationMs); // Wait for the total mining duration
     }
   };
 
+  // Restoring mining state on component mount or refresh
+  useEffect(() => {
+    const miningDataStr = localStorage.getItem("miningData");
+    if (miningDataStr) {
+      const { isMining, startTime, progress } = JSON.parse(miningDataStr);
+      if (isMining) {
+        const elapsed = Date.now() - startTime;
+        const restoredProgress = Math.min((elapsed / miningDurationMs) * 100, 100);
+        const remainingTime = miningDurationMs - elapsed;
+
+        setMiningProgress(restoredProgress);
+        setMining(true);
+
+        if (restoredProgress < 100) {
+          // Clear any existing intervals or timeouts
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+          }
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+          }
+
+          // Set up a new interval to update progress
+          intervalRef.current = setInterval(() => {
+            const newElapsed = Date.now() - startTime;
+            const newProgress = Math.min((newElapsed / miningDurationMs) * 100, 100);
+
+            setMiningProgress(newProgress);
+            localStorage.setItem(
+              "miningData",
+              JSON.stringify({
+                isMining: true,
+                startTime,
+                progress: newProgress,
+              })
+            );
+
+            if (newProgress >= 100) {
+              clearInterval(intervalRef.current);
+            }
+          }, 100);
+
+          // Set up a timeout to finalize mining
+          timeoutRef.current = setTimeout(async () => {
+            clearInterval(intervalRef.current); // Clear interval
+            try {
+              const res = await fetch(`http://localhost:5050/api/mine`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ telegramId }),
+              });
+
+              if (!res.ok) throw new Error("Failed to complete mining");
+
+              const data = await res.json();
+              setPoints((prev) => (prev !== null ? prev + data.minedPoints : data.minedPoints));
+              setMining(false);
+              setMiningProgress(0);
+
+              // Clear mining data from LocalStorage
+              localStorage.setItem(
+                "miningData",
+                JSON.stringify({ isMining: false, startTime: 0, progress: 0 })
+              );
+            } catch (err) {
+              console.error("Error completing mining:", err);
+              alert("An error occurred while completing mining. Please try again.");
+              setMining(false);
+              setMiningProgress(0);
+
+              // Clear mining data from LocalStorage in case of error
+              localStorage.setItem(
+                "miningData",
+                JSON.stringify({ isMining: false, startTime: 0, progress: 0 })
+              );
+            }
+          }, remainingTime);
+        } else {
+          // Mining already completed
+          setMining(false);
+          setMiningProgress(0);
+          localStorage.setItem(
+            "miningData",
+            JSON.stringify({ isMining: false, startTime: 0, progress: 0 })
+          );
+        }
+      }
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // -------------------------------------
   //           TAP HANDLER
   // -------------------------------------
-  const handleTap = () => {
+
+  const handleTap = async () => {
     if (tapCount > 0 && points !== null) {
-      setPoints(points + 1);
+      if (tapTimeoutRef.current) return; // Prevent multiple rapid taps
+
       setTapCount((prev) => Math.max(prev - 1, 0));
+
+      try {
+        const res = await fetch(`http://localhost:5050/api/taps`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            telegramId,
+            increment: 1,
+          }),
+        });
+
+        if (!res.ok) throw new Error("Failed to update taps/points in backend");
+
+        const data = await res.json();
+        setPoints(data.totalPoints);
+      } catch (err) {
+        console.error("Error updating taps in backend:", err);
+        setTapCount((prev) => prev + 1); // Revert tapCount on failure
+      } finally {
+        // Allow tapping again after a short delay (e.g., 100ms)
+        tapTimeoutRef.current = setTimeout(() => {
+          tapTimeoutRef.current = null;
+        }, 100);
+      }
     }
   };
 
@@ -360,7 +514,7 @@ const Home = () => {
             </h1>
           </div>
           <div className="buttons">
-            <div className="button" onClick={() => navigate("/store")}>
+            <div className="button" onClick={() => navigate("/shop")}>
               <div className="icon"></div>
               Store
             </div>
@@ -379,12 +533,14 @@ const Home = () => {
       {/* BOTTOM SECTION */}
       <div className="bottom">
         <div className="tappingareaandprogress">
-          {/* Character for tapping */}
+        {/* // Character for tapping */}
+
           <div className="tappingarea typeable-character" onClick={handleTap}>
             <img src={duck} alt="Character" />
-          </div>
+          </div> 
+          
 
-          {/* Planet progress bar */}
+           { /* Planet progress bar */}
           <div className="planetprogress">
             <div className="progress-container">
               <div

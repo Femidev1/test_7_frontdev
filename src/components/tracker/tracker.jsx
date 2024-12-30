@@ -1,74 +1,29 @@
-// TapTracker.jsx
 import React, { useState, useEffect, useRef } from "react";
 import duck from "../../assets/character1.png";
 
-/**
- * TapTracker component
- *
- * Responsibilities:
- *  1. Manages a local tapCount that refills over time up to tapLimit.
- *  2. Sends an increment to the backend via /api/taps so the server can track total daily taps.
- *  3. Increments the user's total points by 1 each time (POST /user/:telegramId).
- *  4. Displays a tappable character that decrements tapCount with each click.
- *
- * Props:
- *  - telegramId: string (required) - user’s Telegram ID for backend calls
- *  - tapLimit: number (optional) - max number of taps (default 100)
- *  - refillSeconds: number (optional) - time in seconds to fully refill from 0 to tapLimit (default 60)
- *  - pointsPerTap: number (optional) - how many points each tap grants (default 1)
- */
-function TapTracker({
-  telegramId,
-  tapLimit = 100,
-  refillSeconds = 60,
-  pointsPerTap = 1,
-}) {
-  // -------------------------------------
-  //           REFILL LOGIC
-  // -------------------------------------
-  // Calculate how many taps to refill per second
-  const refillRate = tapLimit / refillSeconds;
-
-  // Local tapCount state
+function TapTracker({ telegramId, tapLimit = 100, refillSeconds = 60, pointsPerTap = 1 }) {
+  const refillRate = tapLimit / refillSeconds; // Refill rate per second
   const [tapCount, setTapCount] = useState(() => {
-    // Try to load existing tapCount from localStorage
     const saved = localStorage.getItem("tapCount");
     return saved ? parseFloat(saved) : tapLimit;
   });
-
-  // For requestAnimationFrame
   const lastFrameTimeRef = useRef(0);
 
-  /**
-   * Refill logic using requestAnimationFrame
-   * Continually replenishes tapCount toward tapLimit
-   */
+  // Refill taps using requestAnimationFrame
   const refillFrame = (timestamp) => {
-    if (!lastFrameTimeRef.current) {
-      lastFrameTimeRef.current = timestamp;
-    }
+    if (!lastFrameTimeRef.current) lastFrameTimeRef.current = timestamp;
     const deltaSec = (timestamp - lastFrameTimeRef.current) / 1000;
     lastFrameTimeRef.current = timestamp;
 
-    setTapCount((prev) => {
-      if (prev >= tapLimit) return tapLimit;
-      return Math.min(prev + deltaSec * refillRate, tapLimit);
-    });
-
-    if (tapCount < tapLimit) {
-      requestAnimationFrame(refillFrame);
-    }
+    setTapCount((prev) => Math.min(prev + deltaSec * refillRate, tapLimit));
+    if (tapCount < tapLimit) requestAnimationFrame(refillFrame);
   };
 
   const startRefillAnimation = () => {
-    if (tapCount < tapLimit) {
-      requestAnimationFrame(refillFrame);
-    }
+    if (tapCount < tapLimit) requestAnimationFrame(refillFrame);
   };
 
-  /**
-   * On mount, fast-forward any taps that would've refilled since lastRefillTime
-   */
+  // Fast-forward refill on mount
   useEffect(() => {
     const now = Date.now();
     const lastRefillTime = parseInt(localStorage.getItem("lastRefillTime") || "0", 10) || now;
@@ -82,76 +37,63 @@ function TapTracker({
 
     localStorage.setItem("lastRefillTime", now.toString());
     startRefillAnimation();
-    // eslint-disable-next-line
   }, []);
 
-  /**
-   * Whenever tapCount changes, persist to localStorage
-   */
+  // Save tapCount to localStorage and ensure refill animation continues
   useEffect(() => {
     localStorage.setItem("tapCount", tapCount.toString());
-    if (tapCount < tapLimit) {
-      startRefillAnimation();
-    }
+    if (tapCount < tapLimit) startRefillAnimation();
   }, [tapCount]);
 
-  // -------------------------------------
-  //         HANDLE TAP LOGIC
-  // -------------------------------------
-  /**
-   * handleTap:
-   *  1) Decrement local tapCount
-   *  2) Call /api/taps to increment user.tapsMadeIn24Hrs
-   *  3) Call /user/:telegramId to increment user's points by `pointsPerTap`
-   */
   const handleTap = async () => {
-    if (tapCount <= 0) return;
-    if (!telegramId) return; // we must have an ID
-
-    // Decrement local tap count first
+    if (tapCount <= 0 || !telegramId) {
+      console.warn("No taps left or invalid telegramId.");
+      return;
+    }
+  
     setTapCount((prev) => Math.max(prev - 1, 0));
-
+  
     try {
-      // 1) Increment user’s daily taps
-      await fetch("http://localhost:5050/api/taps", {
+      // Fetch user data to get current points
+      const userResponse = await fetch(`http://localhost:5050/api/user/${telegramId}`);
+      if (!userResponse.ok) {
+        throw new Error(`Failed to fetch user data. Status: ${userResponse.status}`);
+      }
+  
+      const userData = await userResponse.json();
+  
+      // Ensure userData.points is valid
+      if (typeof userData.points !== "number") {
+        throw new Error("Invalid points value in user data.");
+      }
+  
+      // Calculate the updated points
+      const updatedPoints = userData.points + pointsPerTap;
+  
+      // Send POST request to update points
+      const response = await fetch(`http://localhost:5050/api/taps`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          telegramId,
-          increment: 1, // One tap
-        }),
+        body: JSON.stringify({ points: updatedPoints }), // Send points as a number
       });
-
-      // 2) Increment user’s total points
-      //    Step A: Get current user data, so we know their current points
-      const userRes = await fetch(`http://localhost:5050/api/user/${telegramId}`);
-      if (!userRes.ok) throw new Error("Failed to fetch user for points update");
-      const userData = await userRes.json();
-
-      const updatedPoints = (userData.points || 0) + pointsPerTap;
-
-      //    Step B: POST updated points to DB
-      await fetch(`http://localhost:5050/api/user/${telegramId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ points: updatedPoints }),
-      });
+  
+      if (!response.ok) {
+        throw new Error(`Failed to update user points. Status: ${response.status}`);
+      }
+  
+      const responseData = await response.json();
+  
+      console.log(`Updated Points: ${responseData.points}`);
     } catch (err) {
-      console.error("Error updating taps or points:", err);
+      console.error("Error handling taps:", err.message || err);
     }
   };
 
-  // -------------------------------------
-  //             RENDER
-  // -------------------------------------
   return (
     <div className="tap-tracker">
-      {/* Tappable Character */}
       <div className="tapping-area" onClick={handleTap}>
         <img src={duck} alt="Tap Character" />
       </div>
-
-      {/* Display how many taps remain */}
       <div className="tap-count-display">
         Taps Left: {Math.floor(tapCount)} / {tapLimit}
       </div>
