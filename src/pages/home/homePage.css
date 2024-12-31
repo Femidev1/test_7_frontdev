@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+
 .main{
     display: flex;
     flex-direction: column;
@@ -52,12 +54,29 @@
     align-items: center;
 }
 
+.playerpoints{
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  font-family: "Orbitron", serif;
+  width: fit-content;
+}
+
+.player-icon{
+  width: 40px;
+  height: 40px;
+}
+
 .buttons{
     display: flex;
     flex-direction: row;
     width: 100%;
     justify-content: center;
     align-items: center;
+    padding-top: 12px;
+    gap: 12px;
 }
 
 .tap-tracker{
@@ -73,7 +92,18 @@
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    gap: 8px;
+    gap: 4px;
+    padding: 16px 0px;
+    font-size: 1.1rem;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(8px); /* Safari support */
+    background-color: rgba(255, 255, 255, 0.119) !important; /* Semi-transparent white */
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.button-icon{
+  width: 40px;
 }
 
 .player{
@@ -83,6 +113,8 @@
     align-items: flex-start;
     justify-content: flex-start;
     width: 100%;
+    font-weight: 600;
+    font-size: 1.1rem;
 }
 
 .tappingareaandprogress{
@@ -90,7 +122,6 @@
     width: 100%;
     display: flex;
     flex-direction: row;
-
 }
 
 .tappingarea{
@@ -109,6 +140,9 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-end; /* Start the progress bar at the bottom */
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(8px); /* Safari support */
+    background-color: rgba(255, 255, 255, 0.119) !important; /* Semi-transparent white */
   }
   
   .progress-container {
@@ -136,6 +170,7 @@
     color: rgb(0, 0, 0);
     width: 100%;
     padding: 18px;
+    font-weight: 600;
   }
   
   .minebutton button:disabled {
@@ -159,21 +194,29 @@
     padding: 12px;
     width: 100%;
     padding: 10px 20px;
-    border-radius: 5px;
+    border-radius: 8px;
     font-size: 16px;
     transition: background-color 0.3s ease, color 0.3s ease;
+    border: none;
+    font-weight: 600;
   }
   
   .boost-button.active {
-    background-color: #323232; /* Green when active */
     color: #ffffff; /* White text */
     cursor: pointer;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(8px); /* Safari support */
+    background-color: rgba(255, 255, 255, 0.119) !important; /* Semi-transparent white */
   }
   
   .boost-button.disabled {
-    background-color: #cccccc; /* Gray when disabled */
-    color: #666666; /* Darker text */
+    color: #ffffff; /* White text */
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(8px); /* Safari support */
+    background-color: rgba(255, 255, 255, 0.119) !important; /* Semi-transparent white */
     cursor: not-allowed;
+    opacity: 60%;
   }
 
   .taplimit{
@@ -184,7 +227,11 @@
     align-items: center;
     padding: 18px;
     width: 100%;
-    background-color: #323232;
+    border-radius: 8px;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(8px); /* Safari support */
+    background-color: rgba(255, 255, 255, 0.119) !important; /* Semi-transparent white */
+    font-weight: 600;
   }
 
   /* Floating Tap Styles */
@@ -202,10 +249,27 @@
 @keyframes floatUp {
   0% {
     opacity: 1;
+    scale: 1;
     transform: translate(-50%, -50%) translateY(0);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -50%) translateY(-50px);
+    scale: 0.6;
+    transform: translate(-50%, -50%) translateY(-100px);
   }
+}
+
+.homebackground {
+  background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 1)), 
+              url('https://res.cloudinary.com/dhy8xievs/image/upload/v1735628823/Homepage_ul0hjn.png');
+  background-size: cover; /* Ensures it covers the full container */
+  background-position: center; /* Centers the image */
+  background-repeat: no-repeat; /* Prevents tiling */
+  background-attachment: fixed; /* Keeps the background fixed on scroll */
+  width: 100vw; /* Full width of the viewport */
+  height: 100vh; /* Full height of the viewport */
+  position: fixed; /* Keeps it fixed in the background */
+  top: 0;
+  left: 0;
+  z-index: -1; /* Places it behind other elements */
 }

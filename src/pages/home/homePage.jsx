@@ -550,6 +550,9 @@ useEffect(() => {
   // If points is null, we haven't loaded the user's data yet
   return (
     <div className="main">
+      <div className="homebackground">
+
+      </div>
       {/* TOP SECTION */}
       <div className="top">
         <div className="playerdetails">
@@ -558,6 +561,11 @@ useEffect(() => {
             {playerName}
           </div>
           <div className="playerpoints">
+            <img 
+              src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735631352/Token_Icon_luv0et.png" 
+              alt="Player Icon" 
+              className="player-icon" 
+            />
             <h1>
               {points === null
                 ? "Loading..."
@@ -567,15 +575,27 @@ useEffect(() => {
           <div className="buttons">
             {/* Modified Store Button */}
             <div className="button" onClick={() => navigate(`/shop/${telegramId}`)}>
-              <div className="icon"></div>
+              <img 
+              src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735632938/Store_Logo_hwal4f.png" 
+              alt="Player Icon" 
+              className="button-icon" 
+            />
               Store
             </div>
             <div className="button">
-              <div className="icon"></div>
+            <img 
+              src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735632956/Daily_reward_Logo_vr95ch.png" 
+              alt="Player Icon" 
+              className="button-icon" 
+            />
               Daily Reward
             </div>
             <div className="button">
-              <div className="icon"></div>
+            <img 
+              src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735632939/Wallet_logo_hayttr.png" 
+              alt="Player Icon" 
+              className="button-icon" 
+            />
               Wallet
             </div>
           </div>

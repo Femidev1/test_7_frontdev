@@ -20,21 +20,37 @@ const Navbar = () => {
         {telegramId && (
           <>
               <Link to={`/home/${telegramId}`} className="link">
-                <div className="icon"></div>
+                    <img 
+                  src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735634150/HomeIcon_icbfah.png" 
+                  alt="Player Icon" 
+                  className="nav-icon" 
+                />
                 <span>Home</span>
               </Link>
               <Link to={`/quests/${telegramId}`} className="link">
-                <div className="icon"></div>
+                  <img 
+                  src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735634151/QuestsIcon_fpw3nz.png" 
+                  alt="Player Icon" 
+                  className="nav-icon" 
+                />
                 <span>Quests</span>
               </Link>
               <Link to={`/leaderboard/${telegramId}`} className="link">
-                <div className="icon"></div>
+                  <img 
+                  src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735634150/LeaderboardIcon_lllgel.png" 
+                  alt="Player Icon" 
+                  className="nav-icon" 
+                />
                 <span>Leaderboard</span>
               </Link>
           </>
         )}
           <Link to={`/friends/${telegramId}`}  className="link">
-            <div className="icon"></div>
+            <img 
+                src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735634317/FriendsIcon_ew0ucf.png" 
+                alt="Player Icon" 
+                className="nav-icon" 
+              />
             <span>Friends</span>
           </Link>
     </nav>

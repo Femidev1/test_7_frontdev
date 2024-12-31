@@ -3,7 +3,6 @@ import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../../contexts/UserContext";
 import "./leaderboardPage.css";
 
-
 // Utility to format large numbers (1,550 => 1.5K, etc.)
 const formatNumber = (num) => {
   if (!num) return "0";
@@ -65,6 +64,7 @@ const Leaderboard = () => {
 
   return (
     <div className="leaderboard-page">
+       <div className="leaderboardbackground"></div>
       {/* Header */}
       <div className="leaderboard-header">
         <div className="header-icon"></div>

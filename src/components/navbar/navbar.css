@@ -2,11 +2,13 @@
     display: flex;
     flex-direction: row;
     width: 100%;
-    align-items: center; /* Center items vertically */
+    align-items: end; /* Center items vertically */
     justify-content: space-around; /* Equal spacing between items */
     box-sizing: border-box;
-    padding: 16px 0; /* Adjust top and bottom padding without affecting children */
-    background-color: black; /* Ensure the navbar has a clear background */
+    padding: 16px 8px !important; /* Adjust top and bottom padding without affecting children */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(8px); /* Safari support */
+    background-color: rgba(255, 255, 255, 0.119) !important; /* Semi-transparent white */
     position: fixed; /* Keep it fixed at the bottom */
     bottom: 0;
     z-index: 100; /* Keep it above other elements */
@@ -31,14 +33,17 @@
 .link{
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    align-items: end;
+    justify-content: end;
     box-sizing: border-box;
     color: white;
     text-decoration: none;
     font-size: 16px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 0px;
 }
 
+.nav-icon{
+    width: 48px;
+}

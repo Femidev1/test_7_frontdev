@@ -163,6 +163,7 @@ const Shop = () => {
 
   return (
     <div className="shop-page">
+    <div className="shopbackground"></div>
       {/* Top Bar */}
       <div className="shop-header">
         <h1 className="header-title">Shop</h1>

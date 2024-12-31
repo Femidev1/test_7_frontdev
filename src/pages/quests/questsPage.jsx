@@ -111,6 +111,7 @@ const Quests = () => {
 
   return (
     <div className="quests-page">
+      <div className="questsbackground"></div>
       <div className="quests-header">
         <div className="header-title">Quests</div>
       </div>

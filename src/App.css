@@ -34,7 +34,7 @@
   width: 100%;
   display: flex;
   overflow-y: auto; /* Enable scrolling for content */
-  padding-bottom: 80px;
+  padding-bottom: 108px;
   box-sizing: border-box;
   flex-direction: column;
 }

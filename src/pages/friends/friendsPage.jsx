@@ -53,6 +53,7 @@ const Friends = () => {
 
   return (
     <div className="friends-page">
+      <div className="friendsbackground"></div>
       {/* Header Section */}
       <div className="header">
         <div className="friends-count">{friends.length} FRIENDS</div>
