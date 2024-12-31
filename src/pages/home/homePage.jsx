@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./homePage.css";
 import duck from "../../assets/character1.png";
-import TapTracker from "../../components/tracker/tracker";
+import { toast } from "react-toastify";
 
 /**
  * Utility function to format large numbers into a compact string.
@@ -48,11 +48,12 @@ const Home = () => {
   // -------------------------------------
   //             CONSTANTS
   // -------------------------------------
-  const tapLimit = 100;                    // Maximum tap limit
-  const boostCooldownSeconds = 60;         // 60-second cooldown for boost
-  const miningDurationMs = 1 * 60 * 1000;  // 1 minute
-  const miningReward = 20;                // Points awarded after mining
-  const refillRate = tapLimit / 60;        // e.g., 100 taps in 60s => ~1.66 taps/s
+  const tapLimit = 100; // Maximum tap limit
+  const boostCooldownSeconds = 60; // 60-second cooldown for boost
+  const miningDurationMs = 1 * 60 * 1000; // 1 minute
+  const miningReward = 20; // Points awarded after mining
+  const refillRate = tapLimit / 60; // e.g., 100 taps in 60s => ~1.66 taps/s
+  const tapBatchIntervalMs = 500; // Interval to send batched taps
   const tapTimeoutRef = useRef(null);
 
   // -------------------------------------
@@ -83,15 +84,18 @@ const Home = () => {
   // Mining
   const [mining, setMining] = useState(false);
   const [miningProgress, setMiningProgress] = useState(0);
-  
 
   // Gradient for the level/planet progress bar
   const [gradient, setGradient] = useState("linear-gradient(0deg, #00c6ff, #0072ff)");
 
-
-    // Refs for intervals and timeouts
+  // Refs for intervals and timeouts
   const intervalRef = useRef(null);
   const timeoutRef = useRef(null);
+
+  // Ref for tap buffer
+  const tapBufferRef = useRef(0);
+  const tapBatchIntervalRef = useRef(null);
+
   // -------------------------------------
   //         FETCH USER DATA
   // -------------------------------------
@@ -133,16 +137,16 @@ const Home = () => {
   const updatePointsInDatabase = async (increment) => {
     if (!telegramId || isUpdatingPoints) return; // Prevent multiple updates
     isUpdatingPoints = true;
-  
+
     try {
       const res = await fetch(`http://localhost:5050/api/user/${telegramId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ points: increment }),
       });
-  
+
       if (!res.ok) throw new Error("Failed to update points");
-  
+
       const data = await res.json();
       console.log("Updated Points Successfully:", data.totalPoints);
       return data.totalPoints;
@@ -153,7 +157,7 @@ const Home = () => {
     }
   };
 
- /* // Whenever `points` changes (and is not null), post to the backend
+ /* // Commented out as points are managed manually
 useEffect(() => {
   if (points !== null && points !== undefined) {
     const increment = 1; // Adjust increment value as needed
@@ -270,6 +274,9 @@ useEffect(() => {
       setTapCount(tapLimit);
       setBoostCooldown(boostCooldownSeconds);
       localStorage.setItem("lastBoostUsedAt", Date.now().toString());
+
+      // Show toast notification for boost
+      toast.info("Boosted!");
     }
   };
 
@@ -336,6 +343,9 @@ useEffect(() => {
           setMining(false);
           setMiningProgress(0); // Reset progress for the next mining session
 
+          // Show toast notification for mining completion
+          toast.success(`You just got ${data.minedPoints} tokens!`);
+
           // Clear mining data from LocalStorage
           localStorage.setItem(
             "miningData",
@@ -343,7 +353,7 @@ useEffect(() => {
           );
         } catch (err) {
           console.error("Error completing mining:", err);
-          alert("An error occurred while completing mining. Please try again.");
+          toast.error("An error occurred while completing mining. Please try again.");
           setMining(false);
           setMiningProgress(0); // Reset progress on error
 
@@ -416,6 +426,9 @@ useEffect(() => {
               setMining(false);
               setMiningProgress(0);
 
+              // Show toast notification for mining completion
+              toast.success(`You just got ${data.minedPoints} tokens!`);
+
               // Clear mining data from LocalStorage
               localStorage.setItem(
                 "miningData",
@@ -423,7 +436,7 @@ useEffect(() => {
               );
             } catch (err) {
               console.error("Error completing mining:", err);
-              alert("An error occurred while completing mining. Please try again.");
+              toast.error("An error occurred while completing mining. Please try again.");
               setMining(false);
               setMiningProgress(0);
 
@@ -457,41 +470,79 @@ useEffect(() => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
   // -------------------------------------
   //           TAP HANDLER
   // -------------------------------------
 
-  const handleTap = async () => {
+  const [flyingTaps, setFlyingTaps] = useState([]); // State for floating taps
+
+  const handleTap = (e) => {
     if (tapCount > 0 && points !== null) {
-      if (tapTimeoutRef.current) return; // Prevent multiple rapid taps
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const id = Date.now(); // Unique ID for each tap
 
+      // Add a new floating tap
+      setFlyingTaps((prev) => [...prev, { id, x, y }]);
+
+      // Increment the tap buffer
+      tapBufferRef.current += 1;
+      // Decrement tapCount
       setTapCount((prev) => Math.max(prev - 1, 0));
-
-      try {
-        const res = await fetch(`http://localhost:5050/api/taps`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            telegramId,
-            increment: 1,
-          }),
-        });
-
-        if (!res.ok) throw new Error("Failed to update taps/points in backend");
-
-        const data = await res.json();
-        setPoints(data.totalPoints);
-      } catch (err) {
-        console.error("Error updating taps in backend:", err);
-        setTapCount((prev) => prev + 1); // Revert tapCount on failure
-      } finally {
-        // Allow tapping again after a short delay (e.g., 100ms)
-        tapTimeoutRef.current = setTimeout(() => {
-          tapTimeoutRef.current = null;
-        }, 100);
-      }
+      // Optimistically update points
+      setPoints((prev) => (prev !== null ? prev + 1 : 1));
     }
   };
+
+  // Handler to remove a floating tap after animation ends
+  const handleAnimationEnd = (id) => {
+    setFlyingTaps((prev) => prev.filter((tap) => tap.id !== id));
+  };
+
+  // Send batched taps to the backend at regular intervals
+  useEffect(() => {
+    const sendBatchedTaps = async () => {
+      if (tapBufferRef.current > 0 && telegramId) {
+        const increment = tapBufferRef.current;
+        try {
+          const res = await fetch(`http://localhost:5050/api/taps`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              telegramId,
+              increment,
+            }),
+          });
+
+          if (!res.ok) throw new Error("Failed to update taps/points in backend");
+
+          const data = await res.json();
+          console.log("Batched Taps Updated Successfully:", data);
+          // Update points based on backend response
+          setPoints(data.totalPoints);
+          // Reset the tap buffer
+          tapBufferRef.current = 0;
+        } catch (err) {
+          console.error("Error updating batched taps in backend:", err);
+          // Optionally, revert optimistic updates or notify the user
+          // For example:
+          setTapCount((prev) => Math.min(prev + tapBufferRef.current, tapLimit));
+          tapBufferRef.current = 0;
+          toast.error("Failed to update taps. Please try again.");
+        }
+      }
+    };
+
+    // Set up the interval
+    tapBatchIntervalRef.current = setInterval(sendBatchedTaps, tapBatchIntervalMs);
+
+    // Cleanup on unmount
+    return () => {
+      if (tapBatchIntervalRef.current) clearInterval(tapBatchIntervalRef.current);
+    };
+  }, [telegramId, tapBatchIntervalMs]);
 
   // -------------------------------------
   //           RENDER / JSX
@@ -514,7 +565,8 @@ useEffect(() => {
             </h1>
           </div>
           <div className="buttons">
-            <div className="button" onClick={() => navigate("/shop")}>
+            {/* Modified Store Button */}
+            <div className="button" onClick={() => navigate(`/shop/${telegramId}`)}>
               <div className="icon"></div>
               Store
             </div>
@@ -533,14 +585,27 @@ useEffect(() => {
       {/* BOTTOM SECTION */}
       <div className="bottom">
         <div className="tappingareaandprogress">
-        {/* // Character for tapping */}
-
-          <div className="tappingarea typeable-character" onClick={handleTap}>
+          {/* Character for tapping */}
+          <div
+            className="tappingarea typeable-character"
+            onClick={(e) => handleTap(e)}
+            style={{ position: "relative", overflow: "hidden" }} // Ensure floating taps are positioned correctly
+          >
             <img src={duck} alt="Character" />
-          </div> 
-          
+            {/* Render floating taps */}
+            {flyingTaps.map((tap) => (
+              <div
+                key={tap.id}
+                className="flying-tap"
+                style={{ left: tap.x, top: tap.y }}
+                onAnimationEnd={() => handleAnimationEnd(tap.id)}
+              >
+                +1
+              </div>
+            ))}
+          </div>
 
-           { /* Planet progress bar */}
+          {/* Planet progress bar */}
           <div className="planetprogress">
             <div className="progress-container">
               <div

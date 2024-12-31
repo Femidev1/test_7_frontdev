@@ -1,0 +1,30 @@
+/* src/components/ShareReferral.css */
+
+.share-referral {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+  }
+  
+  .referral-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-right: 10px;
+    font-size: 16px;
+  }
+  
+  .copy-button {
+    padding: 10px 20px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
+  .copy-button:hover {
+    background-color: #45a049;
+  }

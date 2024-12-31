@@ -11,12 +11,16 @@ import Leaderboard from "./pages/leaderboard/leaderboardPage";
 import Quests from "./pages/quests/questsPage";
 import Friends from "./pages/friends/friendsPage";
 import { UserProvider } from "./contexts/UserContext";
+import GlobalToast from "./components/GlobalToast";
 
 function App() {
   return (
     <div className="app-container">
       <UserProvider>
         <Router>
+          {/* Global Toast Container should be placed here */}
+          <GlobalToast />
+
           <div className="content">
             <Routes>
               {/* 
@@ -36,10 +40,11 @@ function App() {
               <Route path="/quests/:telegramId" element={<Quests />} />
 
               {/* Other pages without telegramId */}
-              <Route path="/shop" element={<Shop />} />
-              <Route path="/friends" element={<Friends />} />
+              <Route path="/shop/:telegramI" element={<Shop />} />
+              <Route path="/friends/:telegramId" element={<Friends />} />
             </Routes>
           </div>
+          
           <Navbar />
         </Router>
       </UserProvider>

@@ -1,0 +1,16 @@
+/* GlobalToast.css */
+
+/* Style for individual toasts */
+.custom-toast {
+    width: 90vw !important; /* Set width to 90% of viewport width */
+    max-width: 90vw !important; /* Ensure max-width doesn't restrict */
+    /* Optional: Center the toast if needed */
+    margin: 0 auto !important;
+  }
+  
+  /* Optional: Responsive adjustments */
+  @media (max-width: 600px) {
+    .custom-toast {
+      width: 95vw !important; /* Adjust width on smaller screens */
+    }
+  }

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+
 /* General Styling */
 body {
     margin: 0;
@@ -9,6 +11,7 @@ body {
   /* Friends Page */
   .friends-page {
     padding: 20px;
+    height: 100%;
   }
   
   /* Header Section */
@@ -35,10 +38,37 @@ body {
     margin: 0;
   }
   
+  .logo {
+    width: 50px;
+    height: 50px;
+    background-color: gray; /* Placeholder color */
+    border-radius: 50%; /* Make it circular */
+    display: flex;
+    justify-content: center; /* Center content horizontally */
+    align-items: center; /* Center content vertically */
+    object-fit: cover; /* Ensures images scale properly */
+    overflow: hidden; /* Prevents image from spilling out */
+  }
+
+  .reward-banner{
+    display: flex;
+    flex-direction: row;
+    gap: 18px;
+  }
+
+  .reward-banner .description{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: start;
+  }
+
   .reward-banner span {
     font-size: 14px;
     margin-top: 5px;
-    display: block;
+    display: start;
+    text-align: left;
   }
   
   /* Friends List */
@@ -47,13 +77,14 @@ body {
     flex-direction: column;
     gap: 15px;
   }
+
   
   .friend-card {
     display: flex;
     justify-content: space-between;
     align-items: center;
     background-color: #444;
-    padding: 10px;
+    padding: 20px;
     border-radius: 10px;
   }
   
@@ -62,8 +93,23 @@ body {
     height: 50px;
     background-color: gray;
     border-radius: 50%;
+    object-fit: cover; /* Ensures correct scaling */
+    overflow: hidden; /* Prevents overflow for uneven images */
   }
-  
+
+  .avatarandinfo{
+    display: flex;
+    flex-direction: row;
+    gap: 18px;
+  }
+
+  .friend-info{
+    display: flex;
+    flex-direction: column;
+    justify-self: start;
+    align-items: start;
+  }
+
   .friend-info h3 {
     margin: 0;
     font-size: 16px;
@@ -100,4 +146,50 @@ body {
   .nav-button.active {
     font-weight: bold;
     border-bottom: 2px solid white;
+  }
+
+  .shareCTAs{
+    display: flex;
+    flex-direction: row;
+    gap: 18px;
+    padding: 18px;
+    box-sizing: border-box;
+}
+  .copylink{
+    width: 56px;
+    height: 56px;
+    background-color: #444;
+    display: flex;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    object-fit: cover; 
+    overflow: hidden;
+  }
+
+  .inviteFriends {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    background-color: gold;
+    padding: 16px;
+    box-sizing: border-box;
+    color: #222;
+  }
+
+  .friendsbackground{
+    background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 1)), 
+                url('https://res.cloudinary.com/dhy8xievs/image/upload/v1735628824/Quests_Page_dfwz35.png');
+    background-size: cover; /* Ensures it covers the full container */
+    background-position: center; /* Centers the image */
+    background-repeat: no-repeat; /* Prevents tiling */
+    background-attachment: fixed; /* Keeps the background fixed on scroll */
+    width: 100vw; /* Full width of the viewport */
+    height: 100vh; /* Full height of the viewport */
+    position: fixed; /* Keeps it fixed in the background */
+    top: 0;
+    left: 0;
+    z-index: -1;
   }

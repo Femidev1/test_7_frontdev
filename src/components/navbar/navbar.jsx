@@ -33,7 +33,7 @@ const Navbar = () => {
               </Link>
           </>
         )}
-          <Link to="/friends" className="link">
+          <Link to={`/friends/${telegramId}`}  className="link">
             <div className="icon"></div>
             <span>Friends</span>
           </Link>

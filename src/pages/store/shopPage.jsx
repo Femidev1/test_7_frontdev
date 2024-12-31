@@ -1,7 +1,9 @@
-// src/pages/shop/Shop.js
+// src/pages/shop/Shop.jsx
 
 import React, { useState, useEffect, useContext, useRef } from "react";
 import { UserContext } from "../../contexts/UserContext";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "./shopPage.css";
 
 const Shop = () => {
@@ -10,6 +12,7 @@ const Shop = () => {
   const [filter, setFilter] = useState("all"); // State to manage filters
   const [loading, setLoading] = useState(true); // State to track loading status
   const [selectedItem, setSelectedItem] = useState(null); // State to track selected item
+  const [actionLoading, setActionLoading] = useState(false); // State to track action loading
   const itemGridRef = useRef(null); // Reference to the item grid
   const ctaButtonsRef = useRef(null); // Reference to the CTA buttons container
 
@@ -34,7 +37,7 @@ const Shop = () => {
         setLoading(false);
       } catch (error) {
         console.error("Error fetching shop items:", error);
-        alert("Failed to load shop items. Please try again later.");
+        toast.error("Failed to load shop items. Please try again later.");
         setLoading(false);
       }
     };
@@ -69,9 +72,11 @@ const Shop = () => {
   // Handle Purchase Action
   const handlePurchase = async () => {
     if (!selectedItem || !selectedItem.locked) {
-      alert("Please select a locked item to purchase.");
+      toast.error("Please select a locked item to purchase.");
       return;
     }
+
+    setActionLoading(true);
 
     try {
       const response = await fetch(`${API_BASE_URL}/shop/purchase`, {
@@ -85,29 +90,34 @@ const Shop = () => {
       const data = await response.json();
 
       if (response.ok) {
-        alert("Item purchased successfully!");
-        // Update the shop items state to reflect the purchase
+        toast.success("Item purchased successfully!");
+        // Update the shop items state to reflect the purchase with data from backend
+        const updatedItem = data.item; // Updated item from backend
         const updatedItems = shopItems.map((item) =>
-          item._id === selectedItem._id ? { ...item, locked: false } : item
+          item._id === updatedItem._id ? updatedItem : item
         );
         setShopItems(updatedItems);
-        setSelectedItem({ ...selectedItem, locked: false }); // Update selected item
+        setSelectedItem(updatedItem); // Update selected item with latest data
       } else {
         // Handle server-side validation errors
-        alert(data.message || "Failed to purchase item.");
+        toast.error(data.message || "Failed to purchase item.");
       }
     } catch (error) {
       console.error("Error purchasing item:", error);
-      alert("An error occurred while purchasing the item. Please try again.");
+      toast.error("An error occurred while purchasing the item. Please try again.");
+    } finally {
+      setActionLoading(false);
     }
   };
 
   // Handle Upgrade Action
   const handleUpgrade = async () => {
     if (!selectedItem || selectedItem.locked) {
-      alert("Please select an unlocked item to upgrade.");
+      toast.error("Please select an unlocked item to upgrade.");
       return;
     }
+
+    setActionLoading(true);
 
     try {
       const response = await fetch(`${API_BASE_URL}/shop/upgrade`, {
@@ -121,25 +131,23 @@ const Shop = () => {
       const data = await response.json();
 
       if (response.ok) {
-        alert("Item upgraded successfully!");
-        // Update the shop items state to reflect the upgrade
+        toast.success("Item upgraded successfully!");
+        // Update the shop items state to reflect the upgrade with data from backend
+        const updatedItem = data.item; // Updated item from backend
         const updatedItems = shopItems.map((item) =>
-          item._id === selectedItem._id
-            ? { ...item, level: (item.level || 1) + 1 }
-            : item
+          item._id === updatedItem._id ? updatedItem : item
         );
         setShopItems(updatedItems);
-        setSelectedItem({
-          ...selectedItem,
-          level: (selectedItem.level || 1) + 1,
-        }); // Update selected item
+        setSelectedItem(updatedItem); // Update selected item with latest data
       } else {
         // Handle server-side validation errors
-        alert(data.message || "Failed to upgrade item.");
+        toast.error(data.message || "Failed to upgrade item.");
       }
     } catch (error) {
       console.error("Error upgrading item:", error);
-      alert("An error occurred while upgrading the item. Please try again.");
+      toast.error("An error occurred while upgrading the item. Please try again.");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -205,14 +213,42 @@ const Shop = () => {
                   src={item.imageUrl || "/placeholder.png"} // Ensure placeholder.png exists in public directory
                   alt={item.name}
                   className="actual-image"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "/placeholder.png";
+                  }}
                 />
               </div>
               <div className="item-details">
                 <h2 className="item-name">{item.name}</h2>
-                <p className="item-cost">Cost: {item.baseCost} Points</p>
-                <p className="item-points">+{item.basePoints} Points</p>
-                <p className="item-status">{item.locked ? "Locked" : "Unlocked"}</p>
-                {item.level && <p className="item-level">Level: {item.level}</p>}
+                {/* Display item type with capitalized first letter */}
+                <p className="item-type">
+                  Type: {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+                </p>
+                {/* Conditional rendering of cost */}
+                <p className="item-cost">
+                  {item.locked
+                    ? `Cost: ${item.baseCost} Points`
+                    : `Upgrade Cost: ${item.upgradeCost} Points`}
+                </p>
+                {/* Display base points per cycle */}
+                <p className="item-points">
+                  +{item.basePoints} Points/Cycle
+                </p>
+                {/* Display item status */}
+                <p className="item-status">
+                  {item.locked ? "Locked" : "Unlocked"}
+                </p>
+                {/* Display item level if unlocked */}
+                {item.level > 0 && (
+                  <p className="item-level">Level: {item.level}</p>
+                )}
+                {/* Display upgraded points per cycle if unlocked */}
+                {!item.locked && (
+                  <p className="item-upgraded-points">
+                    Points/Cycle: {item.pointsPerCycle}
+                  </p>
+                )}
               </div>
             </div>
           ))
@@ -225,12 +261,20 @@ const Shop = () => {
       {selectedItem && (
         <div className="cta-buttons" ref={ctaButtonsRef}>
           {selectedItem.locked ? (
-            <button className="cta-button purchase" onClick={handlePurchase}>
-              Purchase
+            <button
+              className="cta-button purchase"
+              onClick={handlePurchase}
+              disabled={actionLoading}
+            >
+              {actionLoading ? "Purchasing..." : "Purchase"}
             </button>
           ) : (
-            <button className="cta-button upgrade" onClick={handleUpgrade}>
-              Upgrade
+            <button
+              className="cta-button upgrade"
+              onClick={handleUpgrade}
+              disabled={actionLoading}
+            >
+              {actionLoading ? "Upgrading..." : "Upgrade"}
             </button>
           )}
         </div>

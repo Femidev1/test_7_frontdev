@@ -4,6 +4,7 @@ import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./questsPage.css";
 import { UserContext } from "../../contexts/UserContext";
+import { toast } from "react-toastify";
 
 const Quests = () => {
   const { telegramId: contextTelegramId } = useContext(UserContext); // From UserContext
@@ -21,7 +22,7 @@ const Quests = () => {
   // Redirect if telegramId is not available
   useEffect(() => {
     if (!telegramId) {
-      alert("Telegram ID is missing. Redirecting to the home page.");
+      toast("Telegram ID is missing. Redirecting to the home page.");
       navigate("/");
     }
   }, [telegramId, navigate]);
@@ -40,7 +41,7 @@ const Quests = () => {
       setFilteredQuests(data.quests);
     } catch (error) {
       console.error("Error fetching quests:", error);
-      alert("Error fetching quests. Please try again later.");
+      toast("Error fetching quests. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -68,22 +69,22 @@ const Quests = () => {
       if (response.ok) {
         if (nature === "social") {
           // For social quests, inform the user that the claim is being processed
-          alert(result.message);
+          toast(result.message);
           // Start a timer to refetch quests after 11 seconds (to allow backend to process the claim)
           setTimeout(() => {
             fetchQuests();
           }, 11000); // 11 seconds
         } else {
           // For other quest types, inform the user of successful claim
-          alert(result.message);
+          toast(result.message);
           fetchQuests();
         }
       } else {
-        alert(result.message || "Failed to claim the quest.");
+        toast(result.message || "Failed to claim the quest.");
       }
     } catch (error) {
       console.error("Error claiming quest:", error);
-      alert("Error claiming quest. Please try again.");
+      toast("Error claiming quest. Please try again.");
     } finally {
       setClaimingQuestIds((prev) => prev.filter((id) => id !== questId));
     }

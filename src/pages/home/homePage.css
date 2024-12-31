@@ -186,3 +186,26 @@
     width: 100%;
     background-color: #323232;
   }
+
+  /* Floating Tap Styles */
+.flying-tap {
+  position: absolute;
+  pointer-events: none; /* Allows clicks to pass through */
+  font-size: 24px;
+  font-weight: bold;
+  color: #ffffff; /* Choose a color that stands out */
+  animation: floatUp 1s forwards;
+  transform: translate(-50%, -50%); /* Center the text */
+  user-select: none; /* Prevent text selection */
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translateY(-50px);
+  }
+}
