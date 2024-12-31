@@ -35,7 +35,7 @@ const Friends = () => {
             </div>
             <div className="friend-galaxy-level">
               <p>
-                    ({friend.galaxyName})
+                    {friend.galaxyName}
               </p>
             </div>
           </div>
