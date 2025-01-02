@@ -5,7 +5,7 @@
     align-items: end; /* Center items vertically */
     justify-content: space-around; /* Equal spacing between items */
     box-sizing: border-box;
-    padding: 18px 8px !important; /* Adjust top and bottom padding without affecting children */
+    padding: 8px 8px !important; /* Adjust top and bottom padding without affecting children */
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(8px); /* Safari support */
     background-color: rgba(255, 255, 255, 0.119) !important; /* Semi-transparent white */
@@ -43,6 +43,7 @@
     align-items: center;
     gap: 0px;
     font-weight: 500;
+    margin-bottom: 8px;
 }
 
 .nav-icon{

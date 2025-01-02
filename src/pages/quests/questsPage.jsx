@@ -30,7 +30,9 @@ const Quests = () => {
   // Fetch quests from the backend
   const fetchQuests = async () => {
     try {
-      const response = await fetch(`http://localhost:5050/api/quests?telegramId=${telegramId}`);
+      const response = await fetch(
+        `http://localhost:5050/api/quests?telegramId=${telegramId}&limit=10`
+      );
       if (!response.ok) throw new Error("Failed to fetch quests");
       const data = await response.json();
   

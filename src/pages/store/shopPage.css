@@ -1,3 +1,5 @@
+/* src/pages/shop/shopPage.css */
+
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 
 .shop-page {
@@ -51,6 +53,7 @@
     flex-direction: column;
     gap: 18px;
     margin-top: 44px;
+    margin-bottom: 84px;
   }
   
   .item-card {
@@ -65,7 +68,15 @@
     align-items: center;
   }
 
-  .item-image img {
+  /* Bobbing Animation Keyframes */
+  @keyframes bobbing {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0); }
+  }
+
+  /* Apply the bobbing animation to the images */
+  .actual-image {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -73,6 +84,7 @@
     border-radius: 50%; /* Makes it a circle */
     overflow: hidden; /* Ensures no image overflow */
     flex-shrink: 0; /* Prevent the container from shrinking */
+    animation: bobbing 3s ease-in-out infinite; /* Added animation */
   }
 
   .item-image {
@@ -216,4 +228,3 @@
     left: 50% !important; /* Position the container in the center */
     transform: translateX(-50%) !important; /* Adjust the position to truly center */
   }
-  

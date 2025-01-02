@@ -173,7 +173,7 @@
 
   .claim-button:disabled {
     background-color: #555;
-    color: #aaa;
+    color: #000000;
     cursor: not-allowed;
   }
   

@@ -187,7 +187,7 @@ const Shop = () => {
                 <img
                   src={item.imageUrl || "/placeholder.png"}
                   alt={item.name}
-                  className="actual-image"
+                  className="actual-image" // This class will have the bobbing animation
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = "/placeholder.png";

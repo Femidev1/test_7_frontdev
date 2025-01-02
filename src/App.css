@@ -39,5 +39,5 @@
   overflow-y: auto; /* Enable scrolling for content */
   box-sizing: border-box;
   flex-direction: column;
-  padding-bottom: 120px;
+  padding-bottom: 100px;
 }

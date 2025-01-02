@@ -842,7 +842,7 @@ const Home = () => {
               disabled={mining}
               style={{
                 background: mining
-                  ? `linear-gradient(to right, white ${miningProgress}%, #F4C20C ${miningProgress}%)`
+                  ? `linear-gradient(to right, white ${miningProgress}%, #555 ${miningProgress}%)`
                   : "#F4C20C",
                 color: "black",
                 transition: "background 0.3s ease",

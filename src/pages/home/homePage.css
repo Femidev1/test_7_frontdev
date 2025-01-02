@@ -77,8 +77,7 @@
     width: 100%;
     justify-content: center;
     align-items: center;
-    padding-top: 12px;
-    gap: 12px;
+    gap: 8px;
 }
 
 .tap-tracker{
@@ -413,7 +412,7 @@
   background-color: #FFFFFF; /* White */
   color: #000000; /* Black Text */
   cursor: not-allowed;
-  opacity: 0.6; /* Slightly Transparent */
+  opacity: 1; /* Slightly Transparent */
 }
 
 .cancel-button {
