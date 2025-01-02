@@ -159,7 +159,17 @@
   }
 
   .cta-button.purchase {
-    background-color: #4caf50; /* Green for purchase */
+    background-color: rgb(255, 255, 255) !important; /* Semi-transparent white */
+    padding: 10px 20px;
+    color: #000;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* Add spacing between text and cost */
+    transition: background-color 0.3s ease;
   }
 
   .up{

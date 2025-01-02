@@ -23,7 +23,6 @@ const formatNumber = (num) => {
 
   const units = ["", "K", "M", "B", "T", "Q"];
   const tier = Math.floor(Math.log10(Math.abs(num)) / 3);
-
   if (tier === 0) return num.toString();
 
   const unit = units[tier] || "Q"; // Default to "Q" if tier exceeds defined units
@@ -48,22 +47,19 @@ const Home = () => {
   // -------------------------------------
   //             CONSTANTS
   // -------------------------------------
-  const tapLimit = 100; // Maximum tap limit
-  const boostCooldownSeconds = 60; // 60-second cooldown for boost
+  const tapLimit = 100; 
+  const boostCooldownSeconds = 60; 
   const miningDurationMs = 1 * 60 * 1000; // 1 minute
-  const miningReward = 20; // Points awarded after mining
+  const miningReward = 20; // Points after mining
   const refillRate = tapLimit / 60; // e.g., 100 taps in 60s => ~1.66 taps/s
   const tapBatchIntervalMs = 500; // Interval to send batched taps
 
   // -------------------------------------
   //             LOCAL STATE
   // -------------------------------------
-
-  // Instead of 0, start as null to avoid overwriting DB on mount
+  // Start as null so we know if we haven't loaded actual data yet
   const [points, setPoints] = useState(null);
-
-  // The player's display name from the DB (username or first+last)
-  const [playerName, setPlayerName] = useState("Player Name");
+  const [playerName, setPlayerName] = useState(null);
 
   // Tapping
   const [tapCount, setTapCount] = useState(() => {
@@ -71,7 +67,7 @@ const Home = () => {
     return saved ? parseFloat(saved) : tapLimit;
   });
 
-  // New state for daily rewards
+  // Daily rewards
   const [dailyRewards, setDailyRewards] = useState([]);
 
   // Boost cooldown
@@ -87,23 +83,23 @@ const Home = () => {
   const [mining, setMining] = useState(false);
   const [miningProgress, setMiningProgress] = useState(0);
 
-  // Gradient for the level/planet progress bar
+  // Planet progress bar gradient
   const [gradient, setGradient] = useState("linear-gradient(0deg, #00c6ff, #0072ff)");
 
-  // Refs for intervals and timeouts
+  // Refs for intervals/timeouts
   const intervalRef = useRef(null);
   const timeoutRef = useRef(null);
-
-  // Ref for tap buffer
-  const tapBufferRef = useRef(0);
   const tapBatchIntervalRef = useRef(null);
 
-  // State for floating taps
+  // Buffer for taps
+  const tapBufferRef = useRef(0);
+
+  // Floating taps
   const [flyingTaps, setFlyingTaps] = useState([]);
 
   // Refs for animations
   const tappingAreaRef = useRef(null);
-  const tapContainerRef = useRef(null); // New ref for tap-animation
+  const tapContainerRef = useRef(null);
 
   // -------------------------------------
   //         FETCH USER DATA
@@ -111,40 +107,52 @@ const Home = () => {
   useEffect(() => {
     if (!telegramId) return;
 
+    // We fetch the real data from your backend
     const fetchUserData = async () => {
       try {
         const res = await fetch(`http://localhost:5050/api/user/${telegramId}`);
         if (!res.ok) throw new Error("Failed to fetch user data");
-        const user = await res.json();
 
-        // Set the player's points from DB (don't overwrite if null)
+        const user = await res.json();
+        // Set points from DB
         setPoints(user.points ?? 0);
 
         // Construct a display name from username or fallback to first+last
-        let displayName = user.username && user.username.trim()
-          ? user.username.trim()
-          : "";
-        if (!displayName) {
+        let displayName = "";
+        if (user.username && user.username.trim()) {
+          displayName = user.username.trim();
+        } else {
           const fName = user.firstName ? user.firstName.trim() : "";
           const lName = user.lastName ? user.lastName.trim() : "";
           displayName = (fName + " " + lName).trim();
         }
-        setPlayerName(displayName || "Player Name");
+        setPlayerName(displayName || "Unknown"); // No placeholders
       } catch (err) {
         console.error("Error fetching user data:", err);
       }
     };
 
+    const fetchDailyRewards = async () => {
+      try {
+        const res = await fetch(`http://localhost:5050/api/daily-rewards/${telegramId}`);
+        if (!res.ok) throw new Error("Failed to fetch daily rewards");
+        const data = await res.json();
+        setDailyRewards(data.rewards);
+      } catch (err) {
+        console.error("Error fetching daily rewards:", err);
+      }
+    };
+
     fetchUserData();
+    fetchDailyRewards();
   }, [telegramId]);
 
   // -------------------------------------
   //    UPDATE POINTS IN DATABASE
   // -------------------------------------
-  let isUpdatingPoints = false; // Add a flag to prevent multiple updates
-
+  let isUpdatingPoints = false;
   const updatePointsInDatabase = async (increment) => {
-    if (!telegramId || isUpdatingPoints) return; // Prevent multiple updates
+    if (!telegramId || isUpdatingPoints) return;
     isUpdatingPoints = true;
 
     try {
@@ -162,7 +170,7 @@ const Home = () => {
     } catch (err) {
       console.error("Error updating points in DB:", err);
     } finally {
-      isUpdatingPoints = false; // Reset flag
+      isUpdatingPoints = false;
     }
   };
 
@@ -182,9 +190,7 @@ const Home = () => {
     { min: 10000001, max: 100000000001 },
   ];
 
-  // If points=null, treat it like 0 for progression calculation
   const safePoints = points ?? 0;
-
   const currentLevel =
     levels.find((lvl) => safePoints >= lvl.min && safePoints <= lvl.max) ||
     levels[levels.length - 1];
@@ -197,7 +203,6 @@ const Home = () => {
     return `linear-gradient(0deg, ${randomColor()}, ${randomColor()})`;
   };
 
-  // If the user surpasses the level, move them up & update gradient
   useEffect(() => {
     if (levelProgress >= 100 && points !== null) {
       setPoints(currentLevel.max + 1);
@@ -213,7 +218,6 @@ const Home = () => {
   }, [tapCount]);
 
   const lastFrameTimeRef = useRef(0);
-
   const refillFrame = (timestamp) => {
     if (!lastFrameTimeRef.current) lastFrameTimeRef.current = timestamp;
     const deltaSec = (timestamp - lastFrameTimeRef.current) / 1000;
@@ -237,7 +241,6 @@ const Home = () => {
     }
   };
 
-  // On mount: fast-forward refill from lastRefillTime
   useEffect(() => {
     const now = Date.now();
     const lastRefillTime =
@@ -277,14 +280,11 @@ const Home = () => {
   }, [boostCooldown]);
 
   const useBoost = () => {
-    // Prevent boosting if tapCount is already at or above tapLimit
     if (boostCooldown === 0 && tapCount < tapLimit) {
       setTapCount(tapLimit);
       localStorage.setItem("tapCount", tapLimit.toString());
       setBoostCooldown(boostCooldownSeconds);
       localStorage.setItem("lastBoostUsedAt", Date.now().toString());
-
-      // Show toast notification for boost
       toast.info("Boosted!");
     }
   };
@@ -294,16 +294,11 @@ const Home = () => {
   // -------------------------------------
   const startMining = async () => {
     if (!mining) {
-      // Clear any existing intervals or timeouts to prevent overlaps
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
-      setMining(true); // Start mining
-      setMiningProgress(0); // Reset progress
+      setMining(true);
+      setMiningProgress(0);
 
       const miningStartTime = Date.now();
       localStorage.setItem(
@@ -315,11 +310,9 @@ const Home = () => {
         })
       );
 
-      // Update progress at regular intervals
       intervalRef.current = setInterval(() => {
         const elapsed = Date.now() - miningStartTime;
         const progress = Math.min((elapsed / miningDurationMs) * 100, 100);
-
         setMiningProgress(progress);
         localStorage.setItem(
           "miningData",
@@ -329,33 +322,25 @@ const Home = () => {
             progress,
           })
         );
+        if (progress >= 100) clearInterval(intervalRef.current);
+      }, 100);
 
-        if (progress >= 100) {
-          clearInterval(intervalRef.current); // Stop the interval when progress is complete
-        }
-      }, 100); // Update progress every 100ms
-
-      // Finalize mining after duration
       timeoutRef.current = setTimeout(async () => {
-        clearInterval(intervalRef.current); // Clear the interval after timeout
+        clearInterval(intervalRef.current);
         try {
           const res = await fetch(`http://localhost:5050/api/mine`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ telegramId }),
           });
-
           if (!res.ok) throw new Error("Failed to complete mining");
 
           const data = await res.json();
           setPoints((prev) => (prev !== null ? prev + data.minedPoints : data.minedPoints));
           setMining(false);
-          setMiningProgress(0); // Reset progress for the next mining session
+          setMiningProgress(0);
+          toast.success(`You just got ${data.minedPoints} QKZ!`);
 
-          // Show toast notification for mining completion
-          toast.success(`You just got ${data.minedPoints} tokens!`);
-
-          // Clear mining data from LocalStorage
           localStorage.setItem(
             "miningData",
             JSON.stringify({ isMining: false, startTime: 0, progress: 0 })
@@ -364,19 +349,16 @@ const Home = () => {
           console.error("Error completing mining:", err);
           toast.error("An error occurred while completing mining. Please try again.");
           setMining(false);
-          setMiningProgress(0); // Reset progress on error
-
-          // Clear mining data from LocalStorage in case of error
+          setMiningProgress(0);
           localStorage.setItem(
             "miningData",
             JSON.stringify({ isMining: false, startTime: 0, progress: 0 })
           );
         }
-      }, miningDurationMs); // Wait for the total mining duration
+      }, miningDurationMs);
     }
   };
 
-  // Restoring mining state on component mount or refresh
   useEffect(() => {
     const miningDataStr = localStorage.getItem("miningData");
     if (miningDataStr) {
@@ -390,55 +372,35 @@ const Home = () => {
         setMining(true);
 
         if (restoredProgress < 100) {
-          // Clear any existing intervals or timeouts
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-          }
-          if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-          }
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
-          // Set up a new interval to update progress
           intervalRef.current = setInterval(() => {
             const newElapsed = Date.now() - startTime;
             const newProgress = Math.min((newElapsed / miningDurationMs) * 100, 100);
-
             setMiningProgress(newProgress);
             localStorage.setItem(
               "miningData",
-              JSON.stringify({
-                isMining: true,
-                startTime,
-                progress: newProgress,
-              })
+              JSON.stringify({ isMining: true, startTime, progress: newProgress })
             );
-
-            if (newProgress >= 100) {
-              clearInterval(intervalRef.current);
-            }
+            if (newProgress >= 100) clearInterval(intervalRef.current);
           }, 100);
 
-          // Set up a timeout to finalize mining
           timeoutRef.current = setTimeout(async () => {
-            clearInterval(intervalRef.current); // Clear interval
+            clearInterval(intervalRef.current);
             try {
               const res = await fetch(`http://localhost:5050/api/mine`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ telegramId }),
               });
-
               if (!res.ok) throw new Error("Failed to complete mining");
 
               const data = await res.json();
               setPoints((prev) => (prev !== null ? prev + data.minedPoints : data.minedPoints));
               setMining(false);
               setMiningProgress(0);
-
-              // Show toast notification for mining completion
-              toast.success(`You just got ${data.minedPoints} tokens!`);
-
-              // Clear mining data from LocalStorage
+              toast.success(`You just got ${data.minedPoints} QKZ!`);
               localStorage.setItem(
                 "miningData",
                 JSON.stringify({ isMining: false, startTime: 0, progress: 0 })
@@ -448,8 +410,6 @@ const Home = () => {
               toast.error("An error occurred while completing mining. Please try again.");
               setMining(false);
               setMiningProgress(0);
-
-              // Clear mining data from LocalStorage in case of error
               localStorage.setItem(
                 "miningData",
                 JSON.stringify({ isMining: false, startTime: 0, progress: 0 })
@@ -457,7 +417,7 @@ const Home = () => {
             }
           }, remainingTime);
         } else {
-          // Mining already completed
+          // Mining done
           setMining(false);
           setMiningProgress(0);
           localStorage.setItem(
@@ -468,14 +428,10 @@ const Home = () => {
       }
     }
 
-    // Cleanup on unmount
+    // Cleanup
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -488,40 +444,34 @@ const Home = () => {
       const rect = e.currentTarget.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      const id = Date.now(); // Unique ID for each tap
+      const id = Date.now();
 
-      // Add a new floating tap
       setFlyingTaps((prev) => [...prev, { id, x, y }]);
-
-      // Increment the tap buffer
       tapBufferRef.current += 1;
-      // Decrement tapCount and update localStorage
+
       setTapCount((prev) => {
         const newCount = Math.max(prev - 1, 0);
         localStorage.setItem("tapCount", newCount.toString());
         return newCount;
       });
-      // Optimistically update points
+
       setPoints((prev) => (prev !== null ? prev + 1 : 1));
 
-      // Trigger the tap animation by manipulating the class via tapContainerRef
       if (tapContainerRef.current) {
-        tapContainerRef.current.classList.remove('tap-animation');
-
-        // Trigger reflow to restart the animation
+        tapContainerRef.current.classList.remove("tap-animation");
         void tapContainerRef.current.offsetWidth;
-
-        tapContainerRef.current.classList.add('tap-animation');
+        tapContainerRef.current.classList.add("tap-animation");
       }
     }
   };
 
-  // Handler to remove a floating tap after animation ends
   const handleAnimationEnd = (id) => {
     setFlyingTaps((prev) => prev.filter((tap) => tap.id !== id));
   };
 
-  // Send batched taps to the backend at regular intervals
+  // -------------------------------------
+  //     BATCH TAPS TO BACKEND
+  // -------------------------------------
   useEffect(() => {
     const sendBatchedTaps = async () => {
       if (tapBufferRef.current > 0 && telegramId) {
@@ -535,18 +485,14 @@ const Home = () => {
               increment,
             }),
           });
-
           if (!res.ok) throw new Error("Failed to update taps/points in backend");
 
           const data = await res.json();
           console.log("Batched Taps Updated Successfully:", data);
-          // Update points based on backend response
           setPoints(data.totalPoints);
-          // Reset the tap buffer
           tapBufferRef.current = 0;
         } catch (err) {
           console.error("Error updating batched taps in backend:", err);
-          // Optionally, revert optimistic updates or notify the user
           setTapCount((prev) => Math.min(prev + tapBufferRef.current, tapLimit));
           tapBufferRef.current = 0;
           toast.error("Failed to update taps. Please try again.");
@@ -554,16 +500,15 @@ const Home = () => {
       }
     };
 
-    // Set up the interval
     tapBatchIntervalRef.current = setInterval(sendBatchedTaps, tapBatchIntervalMs);
-
-    // Cleanup on unmount
     return () => {
       if (tapBatchIntervalRef.current) clearInterval(tapBatchIntervalRef.current);
     };
   }, [telegramId, tapBatchIntervalMs, tapLimit]);
 
-  // Daily Rewards
+  // -------------------------------------
+  //         DAILY REWARDS
+  // -------------------------------------
   const [isDailyRewardsVisible, setIsDailyRewardsVisible] = useState(false);
 
   const toggleDailyRewards = () => {
@@ -575,25 +520,24 @@ const Home = () => {
       toast.error("Telegram ID not found!");
       return;
     }
-  
+
     try {
       const res = await fetch("http://localhost:5050/api/daily-reward", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ telegramId }),
       });
-  
+
       const data = await res.json();
-  
       if (!res.ok) {
         throw new Error(data.message || "Failed to collect daily reward");
       }
-  
+
       setPoints((prev) => (prev !== null ? prev + data.pointsEarned : data.pointsEarned));
       toast.success(data.message || "Reward collected successfully!");
-      toggleDailyRewards(); // Close the overlay after collecting
-  
-      // Re-fetch the daily rewards to update the claimed status
+      toggleDailyRewards();
+
+      // Re-fetch daily rewards
       const rewardsRes = await fetch(`http://localhost:5050/api/daily-rewards/${telegramId}`);
       if (rewardsRes.ok) {
         const rewardsData = await rewardsRes.json();
@@ -605,123 +549,127 @@ const Home = () => {
     }
   };
 
-  // -------------------------------------
-  //         FETCH USER DATA & DAILY REWARDS
-  // -------------------------------------
-  useEffect(() => {
-    if (!telegramId) return;
-
-    const fetchUserData = async () => {
-      try {
-        const res = await fetch(`http://localhost:5050/api/user/${telegramId}`);
-        if (!res.ok) throw new Error("Failed to fetch user data");
-        const user = await res.json();
-
-        // Set the player's points from DB (don't overwrite if null)
-        setPoints(user.points ?? 0);
-
-        // Construct a display name from username or fallback to first+last
-        let displayName = user.username && user.username.trim()
-          ? user.username.trim()
-          : "";
-        if (!displayName) {
-          const fName = user.firstName ? user.firstName.trim() : "";
-          const lName = user.lastName ? user.lastName.trim() : "";
-          displayName = (fName + " " + lName).trim();
-        }
-        setPlayerName(displayName || "Player Name");
-      } catch (err) {
-        console.error("Error fetching user data:", err);
-      }
-    };
-
-    const fetchDailyRewards = async () => {
-      try {
-        const res = await fetch(`http://localhost:5050/api/daily-rewards/${telegramId}`);
-        if (!res.ok) throw new Error("Failed to fetch daily rewards");
-        const data = await res.json();
-        setDailyRewards(data.rewards);
-      } catch (err) {
-        console.error("Error fetching daily rewards:", err);
-      }
-    };
-
-    fetchUserData();
-    fetchDailyRewards();
-  }, [telegramId]);
-
   const isTodayRewardClaimed = () => {
     const todayString = new Date().toISOString().split("T")[0];
     return dailyRewards.some((reward) => reward.date === todayString && reward.claimed);
   };
 
   // -------------------------------------
+  //    WELCOME OVERLAY BASED ON POINTS
+  // -------------------------------------
+  const [showWelcomeOverlay, setShowWelcomeOverlay] = useState(false);
+
+  // If user's points are 0 or null, that means they're new => show overlay
+  // Otherwise, hide overlay
+  useEffect(() => {
+    if (points === 0 || points === null) {
+      setShowWelcomeOverlay(true);
+    } else {
+      setShowWelcomeOverlay(false);
+    }
+  }, [points]);
+
+  const handleCloseWelcomeOverlay = () => {
+    setShowWelcomeOverlay(false);
+  };
+
+  // -------------------------------------
   //           RENDER / JSX
   // -------------------------------------
-  // If points is null, we haven't loaded the user's data yet
+
+  // If we haven't loaded user data (playerName or points is null), show minimal text (or spinner).
+  if (playerName === null || points === null) {
+    return (
+      <div className="main">
+        <div className="homebackground" />
+        <h3 style={{ color: "#fff" }}> </h3>
+      </div>
+    );
+  }
+
   return (
     <div className="main">
       <div className="homebackground"></div>
+
+      {/* WELCOME OVERLAY: If points=0 or null => show overlay */}
+      {showWelcomeOverlay && (
+        <div className="overlay" style={{ zIndex: 2000 }}>
+          <div className="overlay-content">
+            <div className="overlay_heading">
+              <h2>Welcome, {playerName}!</h2>
+              <p>Proceed to begin this journey, if you dare click</p>
+            </div>
+            <button
+              style={{ marginTop: "20px", background: "#F4C20C", color: "#000" }}
+              onClick={handleCloseWelcomeOverlay}
+            >
+              Quack
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* TOP SECTION */}
       <div className="top">
-          {/* Daily Rewards Overlay */}
-          {isDailyRewardsVisible && (
-            <div className="overlay">
-              <div className="overlay-content">
-                <h2>Daily Rewards</h2>
-                <p>Check back daily to keep your streak going and get better rewards!</p>
-                <div className="rewards-grid">
-                  {dailyRewards.map((reward) => {
-                    const todayString = new Date().toISOString().split("T")[0];
-                    let opacity = 0.7; // Default opacity
+        {/* Daily Rewards Overlay */}
+        {isDailyRewardsVisible && (
+          <div className="overlay">
+            <div className="overlay-content">
+              <h2>Daily Rewards</h2>
+              <p>Check back daily to keep your streak going and get better rewards!</p>
+              <div className="rewards-grid">
+                {dailyRewards.map((reward) => {
+                  const todayString = new Date().toISOString().split("T")[0];
+                  let opacity = 0.7;
 
-                    if (reward.date === todayString) {
-                      opacity = reward.claimed ? 0.4 : 1; // 40% if claimed, 100% if available to claim
-                    } else {
-                      opacity = reward.claimed ? 0.4 : 0.7; // 40% if claimed, 70% otherwise
-                    }
+                  if (reward.date === todayString) {
+                    opacity = reward.claimed ? 0.4 : 1;
+                  } else {
+                    opacity = reward.claimed ? 0.4 : 0.7;
+                  }
 
-                    return (
-                      <div
-                        className="reward-item"
-                        key={reward.day}
-                        style={{
-                          opacity: opacity,
-                          pointerEvents: reward.claimed ? "none" : "auto",
-                          cursor: reward.claimed ? "not-allowed" : "pointer",
-                        }}
-                        onClick={() => {
-                          if (!reward.claimed && reward.date === todayString) {
-                            handleCollectReward();
-                          }
-                        }}
-                      >
-                        <div className="day">
-                          <span>Day {reward.day}</span>
-                        </div>
-                        <div className="reward">
-                          <img
-                            src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735631352/Token_Icon_luv0et.png"
-                            alt="Token Icon"
-                            className="player-icon"
-                          />
-                          <span>{reward.reward} $QKZ</span>
-                        </div>
+                  return (
+                    <div
+                      className="reward-item"
+                      key={reward.day}
+                      style={{
+                        opacity,
+                        pointerEvents: reward.claimed ? "none" : "auto",
+                        cursor: reward.claimed ? "not-allowed" : "pointer",
+                      }}
+                      onClick={() => {
+                        if (!reward.claimed && reward.date === todayString) {
+                          handleCollectReward();
+                        }
+                      }}
+                    >
+                      <div className="day">
+                        <span>Day {reward.day}</span>
                       </div>
-                    );
-                  })}
-                </div>
-                <button
-                  className={`collect-button ${isTodayRewardClaimed() ? 'not-claimable' : 'claimable'}`}
-                  onClick={handleCollectReward}
-                  disabled={isTodayRewardClaimed()}
-                >
-                  Collect Reward
-                </button>
-                <CloseButton onClick={toggleDailyRewards} />
+                      <div className="reward">
+                        <img
+                          src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735631352/Token_Icon_luv0et.png"
+                          alt="Token Icon"
+                          className="player-icon"
+                        />
+                        <span>{reward.reward} $QKZ</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
+              <button
+                className={`collect-button ${isTodayRewardClaimed() ? "not-claimable" : "claimable"}`}
+                onClick={handleCollectReward}
+                disabled={isTodayRewardClaimed()}
+              >
+                Collect Reward
+              </button>
+              <CloseButton onClick={toggleDailyRewards} />
             </div>
-          )}
+          </div>
+        )}
+
         <div className="playerdetails">
           <div className="player">
             <img
@@ -737,12 +685,10 @@ const Home = () => {
               alt="Token Icon"
               className="player-icon"
             />
-            <h1>
-              {points === null ? "Loading..." : formatNumber(points)}
-            </h1>
+            <h1>{formatNumber(points)}</h1>
           </div>
           <div className="buttons">
-            {/* Modified Store Button */}
+            {/* Store Button */}
             <div className="button" onClick={() => navigate(`/shop/${telegramId}`)}>
               <img
                 src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735632938/Store_Logo_hwal4f.png"
@@ -751,14 +697,18 @@ const Home = () => {
               />
               Store
             </div>
+
+            {/* Daily Reward Button */}
             <div className="button" onClick={toggleDailyRewards}>
               <img
                 src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735632956/Daily_reward_Logo_vr95ch.png"
                 alt="Daily Reward Icon"
                 className="button-icon"
               />
-              Daily Reward
+              Daily win
             </div>
+
+            {/* Wallet Button */}
             <div className="button">
               <img
                 src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735632939/Wallet_logo_hayttr.png"
@@ -779,13 +729,11 @@ const Home = () => {
             className={`tappingarea typeable-character bobbing`}
             ref={tappingAreaRef}
             onClick={handleTap}
-            style={{ position: "relative", overflow: "hidden" }} // Ensure floating taps are positioned correctly
+            style={{ position: "relative", overflow: "hidden" }}
           >
-            {/* Inner Container for Tap Animation */}
             <div className="tap-container" ref={tapContainerRef}>
               <img src={duck} alt="Character" />
             </div>
-            {/* Floating taps */}
             {flyingTaps.map((tap) => (
               <div
                 key={tap.id}
@@ -821,7 +769,6 @@ const Home = () => {
             </div>
             <button
               onClick={useBoost}
-              // Disable if boost is on cooldown or tapCount is at/above tapLimit
               disabled={boostCooldown > 0 || tapCount >= tapLimit}
               className={`boost-button ${
                 boostCooldown > 0 || tapCount >= tapLimit ? "disabled" : "active"

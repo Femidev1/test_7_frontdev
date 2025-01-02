@@ -200,7 +200,7 @@ const Shop = () => {
                   {item.level > 0 && <p className="item-level">Lvl {item.level}</p>}
                   {!item.locked && (
                     <p className="item-upgraded-points">
-                      + {item.pointsPerCycle} $Qkz/hr
+                      + {item.pointsPerCycle} $QKZ/hr
                     </p>
                   )}
                 </div>
