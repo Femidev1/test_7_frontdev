@@ -19,7 +19,7 @@ function App() {
       <UserProvider>
         <Router>
           {/* Global Toast Container should be placed here */}
-          <GlobalToast />
+          <GlobalToast theme="dark" />
 
           <div className="content">
             <Routes>

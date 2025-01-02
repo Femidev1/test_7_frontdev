@@ -30,15 +30,13 @@ const Quests = () => {
   // Fetch quests from the backend
   const fetchQuests = async () => {
     try {
-      console.log("Fetching quests with telegramId...");
       const response = await fetch(`http://localhost:5050/api/quests?telegramId=${telegramId}`);
-      console.log("Response status:", response.status);
       if (!response.ok) throw new Error("Failed to fetch quests");
       const data = await response.json();
-      console.log("Fetched quests:", data.quests);
-
+  
+      // Set quests and maintain priority order
       setQuests(data.quests);
-      setFilteredQuests(data.quests);
+      setFilteredQuests(data.quests); // All quests are fetched, filtered later
     } catch (error) {
       console.error("Error fetching quests:", error);
       toast("Error fetching quests. Please try again later.");
@@ -113,10 +111,15 @@ const Quests = () => {
     <div className="quests-page">
       <div className="questsbackground"></div>
       <div className="quests-header">
+      <img 
+              src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735634151/QuestsIcon_fpw3nz.png" 
+              alt="Token Icon" 
+              className="questheader-icon" 
+      />
         <div className="header-title">Quests</div>
       </div>
 
-      <div className="filter-bar">
+      <div className="filter-barz">
         <button
           className={`filter-button ${filter === "all" ? "active" : ""}`}
           onClick={() => setFilter("all")}
@@ -133,19 +136,19 @@ const Quests = () => {
           className={`filter-button ${filter === "points-based" ? "active" : ""}`}
           onClick={() => setFilter("points-based")}
         >
-          Points-Based
+          Pointzzz
         </button>
         <button
           className={`filter-button ${filter === "tap-based" ? "active" : ""}`}
           onClick={() => setFilter("tap-based")}
         >
-          Tap-Based
+          Tapzzz
         </button>
       </div>
 
       <div className="quests-list">
         {filteredQuests.length === 0 ? (
-          <div>No quests available.</div>
+          <div className="noquests">No quests available.</div>
         ) : (
           filteredQuests.map((quest) => (
             <div className="quest-card" key={quest._id}>
@@ -158,14 +161,14 @@ const Quests = () => {
               </div>
               <div className="quest-info">
                 <h3 className="quest-title">{quest.title}</h3>
-                <p className="quest-type">
-                  {quest.nature === "social"
-                    ? "Socials"
-                    : quest.nature === "points-based"
-                    ? "Points-Based"
-                    : "Tap-Based"}
-                </p>
-                <p className="quest-reward">{quest.reward} Tokens</p>
+                <div className="q-reward">
+                      <img 
+                    src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735631352/Token_Icon_luv0et.png" 
+                    alt="Token Icon" 
+                    className="player-icon" 
+                  />
+                  <p className="quest-reward">{quest.reward} Tokens</p>
+                </div>
               </div>
               <button
                 className={`claim-button ${

@@ -9,22 +9,33 @@
     color: #fff;
     padding: 16px;
     box-sizing: border-box;
+    margin-bottom: 140px;
   }
 
-  .filter-bar {
-    display: flex;
-    flex-direction: row;
+  .filter-barz {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
     gap: 18px;
-    background-color: #333;
     color: #fff;
     padding: 18px;
     border-radius: 5px;
     text-align: center;
-    font-size: 1rem;
     margin-bottom: 20px;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(8px); /* Safari support */
+    background-color: rgba(255, 255, 255, 0.119) !important; /* Semi-transparent white */
+    height: fit-content;
+  }
+
+  .filter-button {
+    font-size: 1rem;
+    font-weight: 500 !important;
   }
   
   .quests-header {
+    font-family: "Orbitron", sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -51,35 +62,49 @@
     gap: 12px;
     padding-bottom: 88px;
   }
+
+  .quests-header img {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px; /* Adjust size as needed */
+    height: 80px; /* Adjust size as needed */
+    border-radius: 50%; /* Makes it a circle */
+    overflow: hidden; /* Ensures no image overflow */
+    flex-shrink: 0; /* Prevent the container from shrinking */
+  }
   
   .quest-card {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    background-color: #444;
     padding: 25px;
     border-radius: 5px;
     transition: transform 0.2s;
     box-sizing: border-box;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(8px); /* Safari support */
+    background-color: rgba(255, 255, 255, 0.119) !important; /* Semi-transparent white */
   }
   
   .quest-image {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
-    background-color: #f4c20c; /* Placeholder background color */
-    border-radius: 50%;
-  }
+    width: 48px; /* Adjust size as needed */
+    height: 48px; /* Adjust size as needed */
+    border-radius: 50%; /* Makes it a circle */
+    overflow: hidden; /* Ensures no image overflow */
+    flex-shrink: 0; /* Prevent the container from shrinking */
+}
   
-  .quest-image img {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-  }
+.quest-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Use 'contain' to preserve aspect ratio */
+  border-radius: 50%;
+}
   
   .quest-info {
     width: 100%;
@@ -90,10 +115,34 @@
     gap: 12px;
   }
   
+  .quest-type{
+    margin: none;
+  }
+
+  .q-reward{
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    align-items: center;
+    font-weight: 400;
+    gap: 4px;
+  }
+
+  .q-reward img{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px; /* Adjust size as needed */
+    height: 24px; /* Adjust size as needed */
+    border-radius: 50%; /* Makes it a circle */
+    overflow: hidden; /* Ensures no image overflow */
+    flex-shrink: 0; /* Prevent the container from shrinking */
+  }
+
   .quest-title {
     font-size: 1rem; /* Adjust font size */
     font-weight: bold; /* Bold text */
-    line-height: 1; /* Tighten spacing (default may cause extra height) */
+    line-height: 1.25; /* Tighten spacing (default may cause extra height) */
     margin: 0; /* Remove any default margin */
     padding: 0; /* Remove padding */
     display: block;
@@ -102,7 +151,7 @@
   
   .quest-reward {
     font-size: 0.9rem;
-    color: #aaa;
+    color: #ffffff;
     height: fit-content;
     margin: 0; 
     padding: 0;
@@ -165,7 +214,7 @@
 }
 
 .questsbackground{
-  background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 1)), 
+  background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 1)), 
               url('https://res.cloudinary.com/dhy8xievs/image/upload/v1735628820/Friends_Page_cnq2nu.png');
   background-size: cover; /* Ensures it covers the full container */
   background-position: center; /* Centers the image */
@@ -177,4 +226,12 @@
   top: 0;
   left: 0;
   z-index: -1;
+}
+
+.noquests{
+  font-family: "Roboto";
+  font-size: 2rem;
+  font-weight: 400;
+  width: 100%;
+  margin-top: 4rem;
 }

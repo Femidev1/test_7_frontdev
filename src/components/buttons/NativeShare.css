@@ -1,16 +1,15 @@
 /* src/components/NativeShare.css */
 
 .native-share-button {
-    padding: 10px 20px;
-    background-color: #008cba;
-    color: white;
+    padding: 24px;
+    background-color:  #F4C20C;
+    color: rgb(0, 0, 0);
     border: none;
     border-radius: 4px;
-    cursor: pointer;
     font-size: 16px;
     margin-left: 10px;
-  }
-  
-  .native-share-button:hover {
-    background-color: #007bb5;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    font-weight: bold;
   }

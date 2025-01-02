@@ -56,7 +56,14 @@ const Friends = () => {
       <div className="friendsbackground"></div>
       {/* Header Section */}
       <div className="header">
+        <div className="countandlogo">
+          <img 
+                  src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735634317/FriendsIcon_ew0ucf.png" 
+                  alt="Token Icon" 
+                  className="player-icon" 
+          />
         <div className="friends-count">{friends.length} FRIENDS</div>
+        </div>
         <div className="reward-banner">
           <div className="savelogo">
             <div className="logo"></div>
@@ -108,14 +115,6 @@ const Friends = () => {
         ) : (
           <p>Loading referral link...</p>
         )}
-      </div>
-
-      {/* Bottom Navigation */}
-      <div className="navbar">
-        <button className="nav-button">Home</button>
-        <button className="nav-button">Leaderboard</button>
-        <button className="nav-button">Quest</button>
-        <button className="nav-button active">Friends</button>
       </div>
     </div>
   );

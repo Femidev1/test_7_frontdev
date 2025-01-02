@@ -67,7 +67,11 @@ const Leaderboard = () => {
        <div className="leaderboardbackground"></div>
       {/* Header */}
       <div className="leaderboard-header">
-        <div className="header-icon"></div>
+        <img 
+              src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735634150/LeaderboardIcon_lllgel.png" 
+              alt="Token Icon" 
+              className="player-icon" 
+            />
         <h1 className="header-title">Leaderboard</h1>
       </div>
 

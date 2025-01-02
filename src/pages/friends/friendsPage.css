@@ -13,23 +13,46 @@ body {
     padding: 20px;
     height: 100%;
   }
+
+  .countandlogo{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
   
   /* Header Section */
   .header {
-    text-align: center;
-    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 0px;
+    flex-shrink: 0; /* Prevent shrinking */
+  }
+
+  .header img {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px; /* Adjust size as needed */
+    height: 80px; /* Adjust size as needed */
+    border-radius: 50%; /* Makes it a circle */
+    overflow: hidden; /* Ensures no image overflow */
+    flex-shrink: 0; /* Prevent the container from shrinking */
   }
   
   .friends-count {
     font-size: 24px;
     font-weight: bold;
+    font-family: "Orbitron", sans-serif;
   }
   
   .reward-banner {
     background-color: #333;
     padding: 15px;
     border-radius: 10px;
-    margin: 10px 0;
+    margin: 40px 0;
   }
   
   .reward-banner p {
@@ -54,6 +77,9 @@ body {
     display: flex;
     flex-direction: row;
     gap: 18px;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(8px); /* Safari support */
+    background-color: rgba(255, 255, 255, 0.119) !important; /* Semi-transparent white */
   }
 
   .reward-banner .description{
@@ -86,6 +112,8 @@ body {
     background-color: #444;
     padding: 20px;
     border-radius: 10px;
+    -webkit-backdrop-filter: blur(8px); /* Safari support */
+    background-color: rgba(255, 255, 255, 0.119) !important; /* Semi-transparent white */
   }
   
   .friend-avatar .avatar-placeholder {
@@ -180,7 +208,7 @@ body {
   }
 
   .friendsbackground{
-    background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 1)), 
+    background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 1)), 
                 url('https://res.cloudinary.com/dhy8xievs/image/upload/v1735628824/Quests_Page_dfwz35.png');
     background-size: cover; /* Ensures it covers the full container */
     background-position: center; /* Centers the image */
@@ -192,4 +220,21 @@ body {
     top: 0;
     left: 0;
     z-index: -1;
+  }
+
+  .savelogo{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .share-section{
+    position: fixed;
+    bottom: 140px;/* Distance from the bottom of the viewport */
+    left: 50%; /* Position the left edge at the center of the viewport */
+    transform: translateX(-50%); /* Shift the element left by half its width */
+    width: 90%;
+    box-sizing: border-box;
+
   }

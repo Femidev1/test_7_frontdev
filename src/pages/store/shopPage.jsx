@@ -16,28 +16,23 @@ const Shop = () => {
   const itemGridRef = useRef(null); // Reference to the item grid
   const ctaButtonsRef = useRef(null); // Reference to the CTA buttons container
 
-  // Base URL for API requests
-  const API_BASE_URL = "http://localhost:5050/api";
+  const API_BASE_URL = "http://localhost:5050/api"; // Base URL for API requests
 
   // Fetch shop items from the backend
   useEffect(() => {
     const fetchShopItems = async () => {
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/shop?userId=${telegramId}` // Pass userId in query params
-        );
+        const response = await fetch(`${API_BASE_URL}/shop?userId=${telegramId}`);
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(
-            errorData.message || `Error: ${response.status} ${response.statusText}`
-          );
+          throw new Error(errorData.message || `Error: ${response.status} ${response.statusText}`);
         }
         const data = await response.json();
-        setShopItems(data); // Store fetched items in state
-        setLoading(false);
+        setShopItems(data);
       } catch (error) {
         console.error("Error fetching shop items:", error);
         toast.error("Failed to load shop items. Please try again later.");
+      } finally {
         setLoading(false);
       }
     };
@@ -59,7 +54,7 @@ const Shop = () => {
         ctaButtonsRef.current &&
         !ctaButtonsRef.current.contains(event.target)
       ) {
-        setSelectedItem(null); // Deselect item if clicked outside
+        setSelectedItem(null);
       }
     };
 
@@ -91,15 +86,12 @@ const Shop = () => {
 
       if (response.ok) {
         toast.success("Item purchased successfully!");
-        // Update the shop items state to reflect the purchase with data from backend
-        const updatedItem = data.item; // Updated item from backend
         const updatedItems = shopItems.map((item) =>
-          item._id === updatedItem._id ? updatedItem : item
+          item._id === data.item._id ? data.item : item
         );
         setShopItems(updatedItems);
-        setSelectedItem(updatedItem); // Update selected item with latest data
+        setSelectedItem(data.item);
       } else {
-        // Handle server-side validation errors
         toast.error(data.message || "Failed to purchase item.");
       }
     } catch (error) {
@@ -132,15 +124,12 @@ const Shop = () => {
 
       if (response.ok) {
         toast.success("Item upgraded successfully!");
-        // Update the shop items state to reflect the upgrade with data from backend
-        const updatedItem = data.item; // Updated item from backend
         const updatedItems = shopItems.map((item) =>
-          item._id === updatedItem._id ? updatedItem : item
+          item._id === data.item._id ? data.item : item
         );
         setShopItems(updatedItems);
-        setSelectedItem(updatedItem); // Update selected item with latest data
+        setSelectedItem(data.item);
       } else {
-        // Handle server-side validation errors
         toast.error(data.message || "Failed to upgrade item.");
       }
     } catch (error) {
@@ -152,10 +141,9 @@ const Shop = () => {
   };
 
   // Filter items based on the selected filter category
-  const filteredItems = shopItems.filter((item) => {
-    if (filter === "all") return true;
-    return item.type === filter;
-  });
+  const filteredItems = shopItems.filter((item) =>
+    filter === "all" ? true : item.type === filter
+  );
 
   if (loading) {
     return <div className="loading">Loading Shop...</div>;
@@ -163,41 +151,28 @@ const Shop = () => {
 
   return (
     <div className="shop-page">
-    <div className="shopbackground"></div>
-      {/* Top Bar */}
+      <ToastContainer 
+        theme="dark" 
+        className="custom-toast-container" // Added custom class
+        position="top-center" // Optional: Position to top-center
+      />
+      <div className="shopbackground"></div>
       <div className="shop-header">
         <h1 className="header-title">Shop</h1>
       </div>
 
-      {/* Filter Bar */}
       <div className="filter-bar">
-        <button
-          className={`filter-button ${filter === "all" ? "active" : ""}`}
-          onClick={() => setFilter("all")}
-        >
-          All
-        </button>
-        <button
-          className={`filter-button ${filter === "character" ? "active" : ""}`}
-          onClick={() => setFilter("character")}
-        >
-          Characters
-        </button>
-        <button
-          className={`filter-button ${filter === "engine" ? "active" : ""}`}
-          onClick={() => setFilter("engine")}
-        >
-          Engines
-        </button>
-        <button
-          className={`filter-button ${filter === "drone" ? "active" : ""}`}
-          onClick={() => setFilter("drone")}
-        >
-          Drones
-        </button>
+        {["all", "character", "engine", "drone"].map((type) => (
+          <button
+            key={type}
+            className={`filter-button ${filter === type ? "active" : ""}`}
+            onClick={() => setFilter(type)}
+          >
+            {type.charAt(0).toUpperCase() + type.slice(1)}
+          </button>
+        ))}
       </div>
 
-      {/* Item Grid */}
       <div className="item-grid" ref={itemGridRef}>
         {filteredItems.length > 0 ? (
           filteredItems.map((item) => (
@@ -209,9 +184,8 @@ const Shop = () => {
               onClick={() => setSelectedItem(item)}
             >
               <div className="item-image">
-                {/* Display actual image if available, else use placeholder */}
                 <img
-                  src={item.imageUrl || "/placeholder.png"} // Ensure placeholder.png exists in public directory
+                  src={item.imageUrl || "/placeholder.png"}
                   alt={item.name}
                   className="actual-image"
                   onError={(e) => {
@@ -222,34 +196,15 @@ const Shop = () => {
               </div>
               <div className="item-details">
                 <h2 className="item-name">{item.name}</h2>
-                {/* Display item type with capitalized first letter */}
-                <p className="item-type">
-                  Type: {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
-                </p>
-                {/* Conditional rendering of cost */}
-                <p className="item-cost">
-                  {item.locked
-                    ? `Cost: ${item.baseCost} Points`
-                    : `Upgrade Cost: ${item.upgradeCost} Points`}
-                </p>
-                {/* Display base points per cycle */}
-                <p className="item-points">
-                  +{item.basePoints} Points/Cycle
-                </p>
-                {/* Display item status */}
-                <p className="item-status">
-                  {item.locked ? "Locked" : "Unlocked"}
-                </p>
-                {/* Display item level if unlocked */}
-                {item.level > 0 && (
-                  <p className="item-level">Level: {item.level}</p>
-                )}
-                {/* Display upgraded points per cycle if unlocked */}
-                {!item.locked && (
-                  <p className="item-upgraded-points">
-                    Points/Cycle: {item.pointsPerCycle}
-                  </p>
-                )}
+                <div className="desc">
+                  {item.level > 0 && <p className="item-level">Lvl {item.level}</p>}
+                  {!item.locked && (
+                    <p className="item-upgraded-points">
+                      + {item.pointsPerCycle} $Qkz/hr
+                    </p>
+                  )}
+                </div>
+                {/* Removed the item-cost paragraph */}
               </div>
             </div>
           ))
@@ -258,7 +213,6 @@ const Shop = () => {
         )}
       </div>
 
-      {/* Conditional CTA Buttons */}
       {selectedItem && (
         <div className="cta-buttons" ref={ctaButtonsRef}>
           {selectedItem.locked ? (
@@ -267,7 +221,7 @@ const Shop = () => {
               onClick={handlePurchase}
               disabled={actionLoading}
             >
-              {actionLoading ? "Purchasing..." : "Purchase"}
+              {actionLoading ? "Purchasing..." : `Purchase (${selectedItem.baseCost} Points)`}
             </button>
           ) : (
             <button
@@ -275,7 +229,10 @@ const Shop = () => {
               onClick={handleUpgrade}
               disabled={actionLoading}
             >
-              {actionLoading ? "Upgrading..." : "Upgrade"}
+              {actionLoading ? "Upgrading..." : `Upgrade`}
+              <div className="up">
+                $QKZ {selectedItem.upgradeCost}
+              </div>
             </button>
           )}
         </div>

@@ -7,6 +7,7 @@
   justify-content: start;
   width: 100vw;
   height: 100vh;
+  overflow-y: scroll !important;
 }
 
 .main{
@@ -16,6 +17,7 @@
   width: 100%;
   justify-items: space-between;
   align-content: space-between;
+  gap: none;
 }
 /* App container to manage layout */
 .app-container {
@@ -26,22 +28,16 @@
   height: 100vh; /* Full height of the viewport */
   width: 100%;
   box-sizing: border-box;
+  overflow-y: scroll !important;
 }
 
 /* Content section to allow scrolling */
 .content {
   height: 100%;
-  width: 100%;
+  width: 100vw;
   display: flex;
   overflow-y: auto; /* Enable scrolling for content */
-  padding-bottom: 108px;
   box-sizing: border-box;
   flex-direction: column;
-}
-
-.shop-page{
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  box-sizing: border-box;
+  padding-bottom: 120px;
 }

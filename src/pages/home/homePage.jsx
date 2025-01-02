@@ -1,9 +1,9 @@
-// src/pages/home/homePage.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./homePage.css";
 import duck from "../../assets/character1.png";
 import { toast } from "react-toastify";
+import CloseButton from "../../components/icons/closeIcon";
 
 /**
  * Utility function to format large numbers into a compact string.
@@ -54,7 +54,6 @@ const Home = () => {
   const miningReward = 20; // Points awarded after mining
   const refillRate = tapLimit / 60; // e.g., 100 taps in 60s => ~1.66 taps/s
   const tapBatchIntervalMs = 500; // Interval to send batched taps
-  const tapTimeoutRef = useRef(null);
 
   // -------------------------------------
   //             LOCAL STATE
@@ -71,6 +70,9 @@ const Home = () => {
     const saved = localStorage.getItem("tapCount");
     return saved ? parseFloat(saved) : tapLimit;
   });
+
+  // New state for daily rewards
+  const [dailyRewards, setDailyRewards] = useState([]);
 
   // Boost cooldown
   const [boostCooldown, setBoostCooldown] = useState(() => {
@@ -95,6 +97,13 @@ const Home = () => {
   // Ref for tap buffer
   const tapBufferRef = useRef(0);
   const tapBatchIntervalRef = useRef(null);
+
+  // State for floating taps
+  const [flyingTaps, setFlyingTaps] = useState([]);
+
+  // Refs for animations
+  const tappingAreaRef = useRef(null);
+  const tapContainerRef = useRef(null); // New ref for tap-animation
 
   // -------------------------------------
   //         FETCH USER DATA
@@ -157,14 +166,6 @@ const Home = () => {
     }
   };
 
- /* // Commented out as points are managed manually
-useEffect(() => {
-  if (points !== null && points !== undefined) {
-    const increment = 1; // Adjust increment value as needed
-    updatePointsInDatabase(increment);
-  }
-}, [points]); // Ensure this only runs when `points` changes */
-
   // -------------------------------------
   //        LEVEL PROGRESSION LOGIC
   // -------------------------------------
@@ -220,7 +221,9 @@ useEffect(() => {
 
     setTapCount((prev) => {
       if (prev >= tapLimit) return tapLimit;
-      return Math.min(prev + deltaSec * refillRate, tapLimit);
+      const newCount = Math.min(prev + deltaSec * refillRate, tapLimit);
+      localStorage.setItem("tapCount", newCount.toString());
+      return newCount;
     });
 
     if (tapCount < tapLimit) {
@@ -244,7 +247,11 @@ useEffect(() => {
     if (diffMs > 0) {
       const diffSeconds = diffMs / 1000;
       const tapsToAdd = diffSeconds * refillRate;
-      setTapCount((prev) => Math.min(prev + tapsToAdd, tapLimit));
+      setTapCount((prev) => {
+        const newCount = Math.min(prev + tapsToAdd, tapLimit);
+        localStorage.setItem("tapCount", newCount.toString());
+        return newCount;
+      });
     }
 
     localStorage.setItem("lastRefillTime", now.toString());
@@ -270,8 +277,10 @@ useEffect(() => {
   }, [boostCooldown]);
 
   const useBoost = () => {
-    if (boostCooldown === 0) {
+    // Prevent boosting if tapCount is already at or above tapLimit
+    if (boostCooldown === 0 && tapCount < tapLimit) {
       setTapCount(tapLimit);
+      localStorage.setItem("tapCount", tapLimit.toString());
       setBoostCooldown(boostCooldownSeconds);
       localStorage.setItem("lastBoostUsedAt", Date.now().toString());
 
@@ -474,11 +483,8 @@ useEffect(() => {
   // -------------------------------------
   //           TAP HANDLER
   // -------------------------------------
-
-  const [flyingTaps, setFlyingTaps] = useState([]); // State for floating taps
-
   const handleTap = (e) => {
-    if (tapCount > 0 && points !== null) {
+    if (tapCount >= 1 && points !== null) {
       const rect = e.currentTarget.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -489,10 +495,24 @@ useEffect(() => {
 
       // Increment the tap buffer
       tapBufferRef.current += 1;
-      // Decrement tapCount
-      setTapCount((prev) => Math.max(prev - 1, 0));
+      // Decrement tapCount and update localStorage
+      setTapCount((prev) => {
+        const newCount = Math.max(prev - 1, 0);
+        localStorage.setItem("tapCount", newCount.toString());
+        return newCount;
+      });
       // Optimistically update points
       setPoints((prev) => (prev !== null ? prev + 1 : 1));
+
+      // Trigger the tap animation by manipulating the class via tapContainerRef
+      if (tapContainerRef.current) {
+        tapContainerRef.current.classList.remove('tap-animation');
+
+        // Trigger reflow to restart the animation
+        void tapContainerRef.current.offsetWidth;
+
+        tapContainerRef.current.classList.add('tap-animation');
+      }
     }
   };
 
@@ -527,7 +547,6 @@ useEffect(() => {
         } catch (err) {
           console.error("Error updating batched taps in backend:", err);
           // Optionally, revert optimistic updates or notify the user
-          // For example:
           setTapCount((prev) => Math.min(prev + tapBufferRef.current, tapLimit));
           tapBufferRef.current = 0;
           toast.error("Failed to update taps. Please try again.");
@@ -542,7 +561,99 @@ useEffect(() => {
     return () => {
       if (tapBatchIntervalRef.current) clearInterval(tapBatchIntervalRef.current);
     };
-  }, [telegramId, tapBatchIntervalMs]);
+  }, [telegramId, tapBatchIntervalMs, tapLimit]);
+
+  // Daily Rewards
+  const [isDailyRewardsVisible, setIsDailyRewardsVisible] = useState(false);
+
+  const toggleDailyRewards = () => {
+    setIsDailyRewardsVisible((prev) => !prev);
+  };
+
+  const handleCollectReward = async () => {
+    if (!telegramId) {
+      toast.error("Telegram ID not found!");
+      return;
+    }
+  
+    try {
+      const res = await fetch("http://localhost:5050/api/daily-reward", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telegramId }),
+      });
+  
+      const data = await res.json();
+  
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to collect daily reward");
+      }
+  
+      setPoints((prev) => (prev !== null ? prev + data.pointsEarned : data.pointsEarned));
+      toast.success(data.message || "Reward collected successfully!");
+      toggleDailyRewards(); // Close the overlay after collecting
+  
+      // Re-fetch the daily rewards to update the claimed status
+      const rewardsRes = await fetch(`http://localhost:5050/api/daily-rewards/${telegramId}`);
+      if (rewardsRes.ok) {
+        const rewardsData = await rewardsRes.json();
+        setDailyRewards(rewardsData.rewards);
+      }
+    } catch (err) {
+      console.error("Error collecting daily reward:", err);
+      toast.error(err.message || "An error occurred while collecting your reward.");
+    }
+  };
+
+  // -------------------------------------
+  //         FETCH USER DATA & DAILY REWARDS
+  // -------------------------------------
+  useEffect(() => {
+    if (!telegramId) return;
+
+    const fetchUserData = async () => {
+      try {
+        const res = await fetch(`http://localhost:5050/api/user/${telegramId}`);
+        if (!res.ok) throw new Error("Failed to fetch user data");
+        const user = await res.json();
+
+        // Set the player's points from DB (don't overwrite if null)
+        setPoints(user.points ?? 0);
+
+        // Construct a display name from username or fallback to first+last
+        let displayName = user.username && user.username.trim()
+          ? user.username.trim()
+          : "";
+        if (!displayName) {
+          const fName = user.firstName ? user.firstName.trim() : "";
+          const lName = user.lastName ? user.lastName.trim() : "";
+          displayName = (fName + " " + lName).trim();
+        }
+        setPlayerName(displayName || "Player Name");
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+      }
+    };
+
+    const fetchDailyRewards = async () => {
+      try {
+        const res = await fetch(`http://localhost:5050/api/daily-rewards/${telegramId}`);
+        if (!res.ok) throw new Error("Failed to fetch daily rewards");
+        const data = await res.json();
+        setDailyRewards(data.rewards);
+      } catch (err) {
+        console.error("Error fetching daily rewards:", err);
+      }
+    };
+
+    fetchUserData();
+    fetchDailyRewards();
+  }, [telegramId]);
+
+  const isTodayRewardClaimed = () => {
+    const todayString = new Date().toISOString().split("T")[0];
+    return dailyRewards.some((reward) => reward.date === todayString && reward.claimed);
+  };
 
   // -------------------------------------
   //           RENDER / JSX
@@ -550,52 +661,110 @@ useEffect(() => {
   // If points is null, we haven't loaded the user's data yet
   return (
     <div className="main">
-      <div className="homebackground">
-
-      </div>
+      <div className="homebackground"></div>
       {/* TOP SECTION */}
       <div className="top">
+          {/* Daily Rewards Overlay */}
+          {isDailyRewardsVisible && (
+            <div className="overlay">
+              <div className="overlay-content">
+                <h2>Daily Rewards</h2>
+                <p>Check back daily to keep your streak going and get better rewards!</p>
+                <div className="rewards-grid">
+                  {dailyRewards.map((reward) => {
+                    const todayString = new Date().toISOString().split("T")[0];
+                    let opacity = 0.7; // Default opacity
+
+                    if (reward.date === todayString) {
+                      opacity = reward.claimed ? 0.4 : 1; // 40% if claimed, 100% if available to claim
+                    } else {
+                      opacity = reward.claimed ? 0.4 : 0.7; // 40% if claimed, 70% otherwise
+                    }
+
+                    return (
+                      <div
+                        className="reward-item"
+                        key={reward.day}
+                        style={{
+                          opacity: opacity,
+                          pointerEvents: reward.claimed ? "none" : "auto",
+                          cursor: reward.claimed ? "not-allowed" : "pointer",
+                        }}
+                        onClick={() => {
+                          if (!reward.claimed && reward.date === todayString) {
+                            handleCollectReward();
+                          }
+                        }}
+                      >
+                        <div className="day">
+                          <span>Day {reward.day}</span>
+                        </div>
+                        <div className="reward">
+                          <img
+                            src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735631352/Token_Icon_luv0et.png"
+                            alt="Token Icon"
+                            className="player-icon"
+                          />
+                          <span>{reward.reward} $QKZ</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <button
+                  className={`collect-button ${isTodayRewardClaimed() ? 'not-claimable' : 'claimable'}`}
+                  onClick={handleCollectReward}
+                  disabled={isTodayRewardClaimed()}
+                >
+                  Collect Reward
+                </button>
+                <CloseButton onClick={toggleDailyRewards} />
+              </div>
+            </div>
+          )}
         <div className="playerdetails">
           <div className="player">
-            <div className="icon"></div>
+            <img
+              src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735790134/Quacker_qape6b.jpg"
+              alt="Token Icon"
+              className="header-icon"
+            />
             {playerName}
           </div>
           <div className="playerpoints">
-            <img 
-              src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735631352/Token_Icon_luv0et.png" 
-              alt="Player Icon" 
-              className="player-icon" 
+            <img
+              src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735631352/Token_Icon_luv0et.png"
+              alt="Token Icon"
+              className="player-icon"
             />
             <h1>
-              {points === null
-                ? "Loading..."
-                : formatNumber(points)}
+              {points === null ? "Loading..." : formatNumber(points)}
             </h1>
           </div>
           <div className="buttons">
             {/* Modified Store Button */}
             <div className="button" onClick={() => navigate(`/shop/${telegramId}`)}>
-              <img 
-              src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735632938/Store_Logo_hwal4f.png" 
-              alt="Player Icon" 
-              className="button-icon" 
-            />
+              <img
+                src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735632938/Store_Logo_hwal4f.png"
+                alt="Store Icon"
+                className="button-icon"
+              />
               Store
             </div>
-            <div className="button">
-            <img 
-              src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735632956/Daily_reward_Logo_vr95ch.png" 
-              alt="Player Icon" 
-              className="button-icon" 
-            />
+            <div className="button" onClick={toggleDailyRewards}>
+              <img
+                src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735632956/Daily_reward_Logo_vr95ch.png"
+                alt="Daily Reward Icon"
+                className="button-icon"
+              />
               Daily Reward
             </div>
             <div className="button">
-            <img 
-              src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735632939/Wallet_logo_hayttr.png" 
-              alt="Player Icon" 
-              className="button-icon" 
-            />
+              <img
+                src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735632939/Wallet_logo_hayttr.png"
+                alt="Wallet Icon"
+                className="button-icon"
+              />
               Wallet
             </div>
           </div>
@@ -607,12 +776,16 @@ useEffect(() => {
         <div className="tappingareaandprogress">
           {/* Character for tapping */}
           <div
-            className="tappingarea typeable-character"
-            onClick={(e) => handleTap(e)}
+            className={`tappingarea typeable-character bobbing`}
+            ref={tappingAreaRef}
+            onClick={handleTap}
             style={{ position: "relative", overflow: "hidden" }} // Ensure floating taps are positioned correctly
           >
-            <img src={duck} alt="Character" />
-            {/* Render floating taps */}
+            {/* Inner Container for Tap Animation */}
+            <div className="tap-container" ref={tapContainerRef}>
+              <img src={duck} alt="Character" />
+            </div>
+            {/* Floating taps */}
             {flyingTaps.map((tap) => (
               <div
                 key={tap.id}
@@ -648,10 +821,17 @@ useEffect(() => {
             </div>
             <button
               onClick={useBoost}
-              disabled={boostCooldown > 0}
-              className={`boost-button ${boostCooldown > 0 ? "disabled" : "active"}`}
+              // Disable if boost is on cooldown or tapCount is at/above tapLimit
+              disabled={boostCooldown > 0 || tapCount >= tapLimit}
+              className={`boost-button ${
+                boostCooldown > 0 || tapCount >= tapLimit ? "disabled" : "active"
+              }`}
             >
-              {boostCooldown > 0 ? `Boost (${boostCooldown}s)` : "Boost"}
+              {boostCooldown > 0
+                ? `Boost (${boostCooldown}s)`
+                : tapCount >= tapLimit
+                ? "Boost (Max)"
+                : "Boost"}
             </button>
           </div>
 

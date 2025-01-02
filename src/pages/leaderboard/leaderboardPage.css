@@ -17,6 +17,18 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
+  font-family: "Orbitron", serif;
+}
+
+.leaderboard-header  img {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px; /* Adjust size as needed */
+  height: 80px; /* Adjust size as needed */
+  border-radius: 50%; /* Makes it a circle */
+  overflow: hidden; /* Ensures no image overflow */
+  flex-shrink: 0; /* Prevent the container from shrinking */
 }
 
 .header-icon {
@@ -29,15 +41,23 @@
 .header-title {
   font-size: 2rem;
   font-weight: bold;
+  line-height: 1;
+  margin: none;
+  padding: 0px;
 }
 
 /* ====================== Filter Bar ====================== */
 .filter-bar {
-  background-color: #333;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(8px); /* Safari support */
+  background-color: rgba(255, 255, 255, 0.119) !important; /* Semi-transparent white */
   color: #fff;
   padding: 10px;
   border-radius: 5px;
   text-align: center;
+  margin-bottom: 18px;
+  position: sticky;
+  z-index: 10;
 }
 
 .filter-button {
@@ -50,11 +70,14 @@
   font-size: 1rem;
   border-radius: 5px;
   transition: background-color 0.3s ease;
+  font-weight: 600;
 }
 
 .filter-button.active,
 .filter-button:hover {
-  background-color: #555;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(8px); /* Safari support */
+  background-color: rgba(255, 255, 255, 0.119) !important; /* Semi-transparent white */
 }
 
 /* ====================== Leaderboard List ====================== */
@@ -74,15 +97,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #444;
-  padding: 15px 25px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(8px); /* Safari support */
+  background-color: rgba(255, 255, 255, 0.119) !important; /* Semi-transparent white */
+  padding: 24px 20px;
   border-radius: 5px;
   transition: transform 0.2s;
   box-sizing: border-box;
-}
-
-.leaderboard-item:hover {
-  transform: scale(1.01);
 }
 
 .current-user {
@@ -116,6 +137,7 @@
   flex: 1;
   text-align: left;
   padding: 0 10px;
+  margin-left: 12px;
 }
 
 .user-name {
@@ -137,7 +159,7 @@
 /* ====================== Current User Card ====================== */
 .current-user-card {
   position: fixed;
-  bottom: 96px;
+  bottom: 140px;
   left: 50%; /* Center horizontally */
   transform: translateX(-50%); /* Adjust position back by 50% of the width */
   width: 92%;
@@ -149,7 +171,9 @@
   padding: 15px 25px;
   box-sizing: border-box;
 
-  background-color: #222; /* Dark background */
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(8px); /* Safari support */
+  background-color: rgba(255, 255, 255, 0.119) !important; /* Semi-transparent white */
   border: 2px solid gold;
 
   border-radius: 8px;
@@ -192,7 +216,7 @@
 }
 
 .leaderboardbackground{
-  background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 1)), 
+  background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 1)), 
               url('https://res.cloudinary.com/dhy8xievs/image/upload/v1735628824/Loeaderboard_Page_l4mjct.png');
   background-size: cover; /* Ensures it covers the full container */
   background-position: center; /* Centers the image */

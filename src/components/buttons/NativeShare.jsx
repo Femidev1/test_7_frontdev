@@ -2,7 +2,6 @@
 
 import React from "react";
 import "./NativeShare.css"; // Optional: For custom styling
-import { toast } from "react-toastify";
 
 const NativeShare = ({ referralLink }) => {
   const shareLink = () => {
