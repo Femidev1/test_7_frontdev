@@ -161,7 +161,7 @@ const Shop = () => {
         <h1 className="header-title">Shop</h1>
       </div>
 
-      <div className="filter-bar">
+      <div className="filter-bars">
         {["all", "character", "engine", "drone"].map((type) => (
           <button
             key={type}
@@ -221,7 +221,7 @@ const Shop = () => {
               onClick={handlePurchase}
               disabled={actionLoading}
             >
-              {actionLoading ? "Purchasing..." : `Purchase (${selectedItem.baseCost} Points)`}
+              {actionLoading ? "Purchasing..." : `Purchase $QKZ ${selectedItem.baseCost}`}
             </button>
           ) : (
             <button

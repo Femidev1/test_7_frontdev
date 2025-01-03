@@ -6,9 +6,9 @@
     justify-content: space-around; /* Equal spacing between items */
     box-sizing: border-box;
     padding: 8px 8px !important; /* Adjust top and bottom padding without affecting children */
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(8px); /* Safari support */
-    background-color: rgba(255, 255, 255, 0.119) !important; /* Semi-transparent white */
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px); /* Safari support */
+    background-color: rgba(255, 255, 255, 0.1) !important; /* Semi-transparent white */
     position: fixed; /* Keep it fixed at the bottom */
     bottom: 0;
     z-index: 100; /* Keep it above other elements */

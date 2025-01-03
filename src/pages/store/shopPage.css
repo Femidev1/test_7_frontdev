@@ -24,13 +24,17 @@
     font-weight: bold;
   }
   
-  .filter-bar {
+  .filter-bars {
     display: flex;
     flex-wrap: wrap;
     box-sizing: border-box;
     justify-content: space-around;
-    padding: 18px;
+    padding: 18px 24px;
     gap: 12px;
+    margin: none;
+    backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(8px); /* Safari support */
+  background-color: rgba(255, 255, 255, 0.119) !important; /* Semi-transparent white */
   }
   
   .filter-button {
@@ -51,23 +55,31 @@
   .item-grid {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 2rem;
     margin-top: 44px;
     margin-bottom: 84px;
   }
-  
   .item-card {
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px); /* Safari support */
     background-color: rgba(255, 255, 255, 0.1) !important; /* Semi-transparent white */
     border-radius: 8px;
-    padding: 16px;
+    padding: 16px 40px;
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
+    box-sizing: border-box;
+    transition: all 0.3s ease-in-out; /* Smooth transition */
   }
-
+  
+  .item-card.selected {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px); /* Safari support */
+    background-color: rgba(234, 203, 89, 0.1) !important; /* Semi-transparent gold */
+    border: 3px solid #e0bb38;
+    box-shadow: 0 0 20px rgba(224, 187, 56, 0.8); /* Brighter static glow */
+  }
   /* Bobbing Animation Keyframes */
   @keyframes bobbing {
     0% { transform: translateY(0); }
@@ -91,12 +103,13 @@
     flex-direction: column;
     height: fit-content;
     width: fit-content;
-    margin-bottom: 16px;
     display: flex;
     justify-content: center;
     align-items: center;
+    width: 22.5rem;
+    height: 22.5rem;
   }
-  
+
   .placeholder-image {
     width: 80px;
     height: 80px;
@@ -107,11 +120,14 @@
   .item-details {
     text-align: center;
     width: 100%;
+    gap: 0.25rem;
   }
   
   .item-name {
     font-size: 32px;
     font-weight: bold;
+    line-height: 1.2;
+    margin: none;
   }
 
   .item-upgraded-points{
