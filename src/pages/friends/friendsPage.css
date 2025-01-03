@@ -238,3 +238,16 @@ body {
     box-sizing: border-box;
 
   }
+
+  .no-friends{
+    font-family: "Roboto";
+    font-size: 2rem;
+    font-weight: 400;
+    width: 100%;
+    margin-top: 3rem;
+    font-weight: 500;
+  }
+
+  .savelogo img{
+    
+  }

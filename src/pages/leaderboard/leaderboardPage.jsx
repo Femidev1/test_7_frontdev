@@ -146,7 +146,7 @@ const Leaderboard = () => {
             <div className="user-name">
               {currentUser.username || "Your Name"} (You)
             </div>
-            <div className="user-tokens">{formatNumber(currentUser.points)} Tokens</div>
+            <div className="user-tokens">{formatNumber(currentUser.points)} $QKZ</div>
           </div>
           <div className="user-position">
             #

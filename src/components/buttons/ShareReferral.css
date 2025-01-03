@@ -1,6 +1,7 @@
 .sharing-options{
   display: flex;
   flex-direction: row;
+  gap: 0.5rem;
 }
 
 .share-referral {

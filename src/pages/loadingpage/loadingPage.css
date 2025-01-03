@@ -41,8 +41,8 @@
 
 /* The spinner itself */
 .spinner {
-  width: 40px;
-  height: 40px;
+  width: 24px;
+  height: 24px;
   border: 8px solid rgba(255, 255, 255, 0.2); /* Semi-transparent border */
   border-top-color: #fff; /* White color for the top (the spinning part) */
   border-radius: 50%;

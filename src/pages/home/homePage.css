@@ -307,7 +307,7 @@
   backdrop-filter: blur(4px);
   font-weight: 600;
   color: #fff;
-  padding: 20px 16px;
+  padding: 20px 12px;
   border-radius: 10px;
   text-align: center;
   width: 100%;
@@ -536,5 +536,25 @@
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    font-weight: bold;
+  }
+
+  .close-icon-container{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: fit-content;
+    box-sizing: border-box;
+  }
+
+  .close-icon-container button{
+    width: 4rem;
+    height: 4rem;
+    display: flex;
+    flex-direction: row;
+    padding-right: 1rem;
+    align-items: center;
+    justify-content: center;
     font-weight: bold;
   }

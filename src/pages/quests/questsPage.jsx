@@ -169,7 +169,7 @@ const Quests = () => {
                     alt="Token Icon" 
                     className="player-icon" 
                   />
-                  <p className="quest-reward">{quest.reward} Tokens</p>
+                  <p className="quest-reward">{quest.reward} $QKZ</p>
                 </div>
               </div>
               <button

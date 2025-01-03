@@ -20,7 +20,7 @@ const Navbar = () => {
         {telegramId && (
           <>
               <Link to={`/home/${telegramId}`} className="link">
-                    <img 
+                <img 
                   src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735634150/HomeIcon_icbfah.png" 
                   alt="Player Icon" 
                   className="nav-icon" 

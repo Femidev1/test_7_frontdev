@@ -9,15 +9,11 @@ import CloseButton from "../../components/icons/closeIcon";
  * Utility function to format large numbers into a compact string.
  * E.g., 1021000 becomes "1.02M".
  * Numbers less than 1,000 are shown as whole numbers (rounded up).
- *
- * @param {number} num - The number to format.
- * @returns {string} - The formatted number string.
  */
 const formatNumber = (num) => {
   if (num === null || num === undefined) return "0";
 
   if (num < 1000) {
-    // Numbers less than 1,000 are rounded up to whole numbers
     return Math.ceil(num).toString();
   }
 
@@ -39,7 +35,7 @@ const formatNumber = (num) => {
 
 const Home = () => {
   // -------------------------------------
-  //         GET TELEGRAM ID FROM URL
+  //       GET TELEGRAM ID FROM URL
   // -------------------------------------
   const { telegramId } = useParams();
   const navigate = useNavigate();
@@ -50,24 +46,20 @@ const Home = () => {
   const tapLimit = 100; 
   const boostCooldownSeconds = 60; 
   const miningDurationMs = 1 * 60 * 1000; // 1 minute
-  const miningReward = 20; // Points after mining
   const refillRate = tapLimit / 60; // e.g., 100 taps in 60s => ~1.66 taps/s
   const tapBatchIntervalMs = 500; // Interval to send batched taps
 
   // -------------------------------------
   //             LOCAL STATE
   // -------------------------------------
-  // Start as null so we know if we haven't loaded actual data yet
   const [points, setPoints] = useState(null);
   const [playerName, setPlayerName] = useState(null);
-
-  // Tapping
   const [tapCount, setTapCount] = useState(() => {
     const saved = localStorage.getItem("tapCount");
     return saved ? parseFloat(saved) : tapLimit;
   });
 
-  // Daily rewards
+  // Daily rewards array from backend
   const [dailyRewards, setDailyRewards] = useState([]);
 
   // Boost cooldown
@@ -79,27 +71,29 @@ const Home = () => {
     return remaining > 0 ? remaining : 0;
   });
 
-  // Mining
+  // Mining states
   const [mining, setMining] = useState(false);
   const [miningProgress, setMiningProgress] = useState(0);
 
   // Planet progress bar gradient
   const [gradient, setGradient] = useState("linear-gradient(0deg, #00c6ff, #0072ff)");
 
-  // Refs for intervals/timeouts
+  // Intervals/Timeouts
   const intervalRef = useRef(null);
   const timeoutRef = useRef(null);
   const tapBatchIntervalRef = useRef(null);
 
-  // Buffer for taps
+  // Tap buffer & flying taps
   const tapBufferRef = useRef(0);
-
-  // Floating taps
   const [flyingTaps, setFlyingTaps] = useState([]);
 
-  // Refs for animations
+  // For animations
   const tappingAreaRef = useRef(null);
   const tapContainerRef = useRef(null);
+
+  // Overlay states
+  const [isDailyRewardsVisible, setIsDailyRewardsVisible] = useState(false);
+  const [showWelcomeOverlay, setShowWelcomeOverlay] = useState(false);
 
   // -------------------------------------
   //         FETCH USER DATA
@@ -107,17 +101,14 @@ const Home = () => {
   useEffect(() => {
     if (!telegramId) return;
 
-    // We fetch the real data from your backend
     const fetchUserData = async () => {
       try {
         const res = await fetch(`http://localhost:5050/api/user/${telegramId}`);
         if (!res.ok) throw new Error("Failed to fetch user data");
-
         const user = await res.json();
-        // Set points from DB
+
         setPoints(user.points ?? 0);
 
-        // Construct a display name from username or fallback to first+last
         let displayName = "";
         if (user.username && user.username.trim()) {
           displayName = user.username.trim();
@@ -126,7 +117,7 @@ const Home = () => {
           const lName = user.lastName ? user.lastName.trim() : "";
           displayName = (fName + " " + lName).trim();
         }
-        setPlayerName(displayName || "Unknown"); // No placeholders
+        setPlayerName(displayName || "Unknown");
       } catch (err) {
         console.error("Error fetching user data:", err);
       }
@@ -137,7 +128,7 @@ const Home = () => {
         const res = await fetch(`http://localhost:5050/api/daily-rewards/${telegramId}`);
         if (!res.ok) throw new Error("Failed to fetch daily rewards");
         const data = await res.json();
-        setDailyRewards(data.rewards);
+        setDailyRewards(data.rewards || []);
       } catch (err) {
         console.error("Error fetching daily rewards:", err);
       }
@@ -146,6 +137,22 @@ const Home = () => {
     fetchUserData();
     fetchDailyRewards();
   }, [telegramId]);
+
+  // -------------------------------------
+  //     WELCOME OVERLAY BASED ON POINTS
+  // -------------------------------------
+  useEffect(() => {
+    // If user's points are 0 or null => show the welcome overlay
+    if (points === 0 || points === null) {
+      setShowWelcomeOverlay(true);
+    } else {
+      setShowWelcomeOverlay(false);
+    }
+  }, [points]);
+
+  const handleCloseWelcomeOverlay = () => {
+    setShowWelcomeOverlay(false);
+  };
 
   // -------------------------------------
   //    UPDATE POINTS IN DATABASE
@@ -161,7 +168,6 @@ const Home = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ points: increment }),
       });
-
       if (!res.ok) throw new Error("Failed to update points");
 
       const data = await res.json();
@@ -198,14 +204,16 @@ const Home = () => {
   const levelProgress =
     ((safePoints - currentLevel.min) / (currentLevel.max - currentLevel.min)) * 100;
 
+  // Random bright gradient for next level
   const getRandomBrightGradient = () => {
     const randomColor = () => `hsl(${Math.random() * 360}, 100%, 50%)`;
     return `linear-gradient(0deg, ${randomColor()}, ${randomColor()})`;
   };
 
+  // If the progress has hit or exceeded 100%, auto-level up
   useEffect(() => {
     if (levelProgress >= 100 && points !== null) {
-      setPoints(currentLevel.max + 1);
+      setPoints(currentLevel.max + 1); // Move user to the next level
       setGradient(getRandomBrightGradient());
     }
   }, [levelProgress, currentLevel.max, points]);
@@ -243,8 +251,7 @@ const Home = () => {
 
   useEffect(() => {
     const now = Date.now();
-    const lastRefillTime =
-      parseInt(localStorage.getItem("lastRefillTime") || "0", 10) || now;
+    const lastRefillTime = parseInt(localStorage.getItem("lastRefillTime") || "0", 10) || now;
     const diffMs = now - lastRefillTime;
 
     if (diffMs > 0) {
@@ -293,72 +300,74 @@ const Home = () => {
   //         MINING LOGIC
   // -------------------------------------
   const startMining = async () => {
-    if (!mining) {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (mining) return; // Already mining? do nothing
 
-      setMining(true);
-      setMiningProgress(0);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
-      const miningStartTime = Date.now();
+    setMining(true);
+    setMiningProgress(0);
+
+    const miningStartTime = Date.now();
+    localStorage.setItem(
+      "miningData",
+      JSON.stringify({
+        isMining: true,
+        startTime: miningStartTime,
+        progress: 0,
+      })
+    );
+
+    // Animate progress
+    intervalRef.current = setInterval(() => {
+      const elapsed = Date.now() - miningStartTime;
+      const progress = Math.min((elapsed / miningDurationMs) * 100, 100);
+      setMiningProgress(progress);
       localStorage.setItem(
         "miningData",
         JSON.stringify({
           isMining: true,
           startTime: miningStartTime,
-          progress: 0,
+          progress,
         })
       );
+      if (progress >= 100) clearInterval(intervalRef.current);
+    }, 100);
 
-      intervalRef.current = setInterval(() => {
-        const elapsed = Date.now() - miningStartTime;
-        const progress = Math.min((elapsed / miningDurationMs) * 100, 100);
-        setMiningProgress(progress);
+    timeoutRef.current = setTimeout(async () => {
+      clearInterval(intervalRef.current);
+      try {
+        const res = await fetch(`http://localhost:5050/api/mine`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ telegramId }),
+        });
+        if (!res.ok) throw new Error("Failed to complete mining");
+
+        const data = await res.json();
+        setPoints((prev) => (prev !== null ? prev + data.minedPoints : data.minedPoints));
+        setMining(false);
+        setMiningProgress(0);
+        toast.success(`You just got ${data.minedPoints} QKZ!`);
+
         localStorage.setItem(
           "miningData",
-          JSON.stringify({
-            isMining: true,
-            startTime: miningStartTime,
-            progress,
-          })
+          JSON.stringify({ isMining: false, startTime: 0, progress: 0 })
         );
-        if (progress >= 100) clearInterval(intervalRef.current);
-      }, 100);
-
-      timeoutRef.current = setTimeout(async () => {
-        clearInterval(intervalRef.current);
-        try {
-          const res = await fetch(`http://localhost:5050/api/mine`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ telegramId }),
-          });
-          if (!res.ok) throw new Error("Failed to complete mining");
-
-          const data = await res.json();
-          setPoints((prev) => (prev !== null ? prev + data.minedPoints : data.minedPoints));
-          setMining(false);
-          setMiningProgress(0);
-          toast.success(`You just got ${data.minedPoints} QKZ!`);
-
-          localStorage.setItem(
-            "miningData",
-            JSON.stringify({ isMining: false, startTime: 0, progress: 0 })
-          );
-        } catch (err) {
-          console.error("Error completing mining:", err);
-          toast.error("An error occurred while completing mining. Please try again.");
-          setMining(false);
-          setMiningProgress(0);
-          localStorage.setItem(
-            "miningData",
-            JSON.stringify({ isMining: false, startTime: 0, progress: 0 })
-          );
-        }
-      }, miningDurationMs);
-    }
+      } catch (err) {
+        console.error("Error completing mining:", err);
+        toast.error("An error occurred while completing mining. Please try again.");
+        setMining(false);
+        setMiningProgress(0);
+        localStorage.setItem(
+          "miningData",
+          JSON.stringify({ isMining: false, startTime: 0, progress: 0 })
+        );
+      }
+    }, miningDurationMs);
   };
 
+  // Restore mining progress on page reload
   useEffect(() => {
     const miningDataStr = localStorage.getItem("miningData");
     if (miningDataStr) {
@@ -417,7 +426,7 @@ const Home = () => {
             }
           }, remainingTime);
         } else {
-          // Mining done
+          // Mining ended already
           setMining(false);
           setMiningProgress(0);
           localStorage.setItem(
@@ -454,12 +463,12 @@ const Home = () => {
         localStorage.setItem("tapCount", newCount.toString());
         return newCount;
       });
-
       setPoints((prev) => (prev !== null ? prev + 1 : 1));
 
+      // Trigger tap animation class
       if (tapContainerRef.current) {
         tapContainerRef.current.classList.remove("tap-animation");
-        void tapContainerRef.current.offsetWidth;
+        void tapContainerRef.current.offsetWidth; // force reflow
         tapContainerRef.current.classList.add("tap-animation");
       }
     }
@@ -470,7 +479,7 @@ const Home = () => {
   };
 
   // -------------------------------------
-  //     BATCH TAPS TO BACKEND
+  //    BATCH TAPS TO BACKEND (Interval)
   // -------------------------------------
   useEffect(() => {
     const sendBatchedTaps = async () => {
@@ -480,10 +489,7 @@ const Home = () => {
           const res = await fetch(`http://localhost:5050/api/taps`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              telegramId,
-              increment,
-            }),
+            body: JSON.stringify({ telegramId, increment }),
           });
           if (!res.ok) throw new Error("Failed to update taps/points in backend");
 
@@ -493,6 +499,7 @@ const Home = () => {
           tapBufferRef.current = 0;
         } catch (err) {
           console.error("Error updating batched taps in backend:", err);
+          // If we fail, restore the tapCount to not lose taps:
           setTapCount((prev) => Math.min(prev + tapBufferRef.current, tapLimit));
           tapBufferRef.current = 0;
           toast.error("Failed to update taps. Please try again.");
@@ -507,10 +514,8 @@ const Home = () => {
   }, [telegramId, tapBatchIntervalMs, tapLimit]);
 
   // -------------------------------------
-  //         DAILY REWARDS
+  //       DAILY REWARDS LOGIC
   // -------------------------------------
-  const [isDailyRewardsVisible, setIsDailyRewardsVisible] = useState(false);
-
   const toggleDailyRewards = () => {
     setIsDailyRewardsVisible((prev) => !prev);
   };
@@ -527,17 +532,20 @@ const Home = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ telegramId }),
       });
-
       const data = await res.json();
+
       if (!res.ok) {
         throw new Error(data.message || "Failed to collect daily reward");
       }
 
+      // Increase points on frontend
       setPoints((prev) => (prev !== null ? prev + data.pointsEarned : data.pointsEarned));
       toast.success(data.message || "Reward collected successfully!");
+
+      // Close daily rewards overlay
       toggleDailyRewards();
 
-      // Re-fetch daily rewards
+      // Re-fetch daily rewards to get updated status
       const rewardsRes = await fetch(`http://localhost:5050/api/daily-rewards/${telegramId}`);
       if (rewardsRes.ok) {
         const rewardsData = await rewardsRes.json();
@@ -549,43 +557,86 @@ const Home = () => {
     }
   };
 
-  const isTodayRewardClaimed = () => {
-    const todayString = new Date().toISOString().split("T")[0];
-    return dailyRewards.some((reward) => reward.date === todayString && reward.claimed);
-  };
+  // Identify the "next unclaimed" reward index
+  const nextUnclaimedIndex = dailyRewards.findIndex((reward) => !reward.claimed);
+  // If user has claimed everything, nextUnclaimedIndex could be -1
+  // This means the user has no more unclaimed rewards
+  const nextReward =
+    nextUnclaimedIndex === -1 ? null : dailyRewards[nextUnclaimedIndex];
 
-  // -------------------------------------
-  //    WELCOME OVERLAY BASED ON POINTS
-  // -------------------------------------
-  const [showWelcomeOverlay, setShowWelcomeOverlay] = useState(false);
+  // Determine if the next unclaimed reward is actually for "today"
+  const todayString = new Date().toISOString().split("T")[0];
+  const isNextRewardForToday = nextReward && nextReward.date === todayString;
 
-  // If user's points are 0 or null, that means they're new => show overlay
-  // Otherwise, hide overlay
-  useEffect(() => {
-    if (points === 0 || points === null) {
-      setShowWelcomeOverlay(true);
+  // We want the collect button to be "claimable" (yellow) only if there's a next reward
+  // and its date is actually today
+  const canCollectToday = Boolean(nextReward && isNextRewardForToday);
+
+  /**
+   * We also define a function to style each reward item:
+   * - If index < nextUnclaimedIndex => past (collected)
+   * - If index === nextUnclaimedIndex => next in line
+   * - If index > nextUnclaimedIndex => future
+   */
+  const getRewardItemStyle = (reward, index) => {
+    // By default
+    let style = {
+      opacity: 0.4,
+      filter: "grayscale(100%)",
+      pointerEvents: "none",
+      cursor: "not-allowed",
+    };
+
+    if (index < nextUnclaimedIndex) {
+      // Past (already collected)
+      // Low opacity + grayscale, no pointer
+      // (If you want a different style for unclaimed in the past, you can adapt here)
+      style = {
+        opacity: 0.4,
+        filter: "grayscale(100%)",
+        pointerEvents: "none",
+        cursor: "not-allowed",
+      };
+    } else if (index === nextUnclaimedIndex) {
+      // Next in line
+      // Full opacity + full color
+      style = {
+        opacity: 1,
+        filter: "grayscale(0%)",
+      };
+      // But pointer events only if it's actually today's reward
+      if (reward.date === todayString) {
+        // It's claimable => pointerEvents => auto
+        style.pointerEvents = "auto";
+        style.cursor = "pointer";
+      } else {
+        // Not yet claimable => no pointer
+        style.pointerEvents = "none";
+        style.cursor = "not-allowed";
+      }
     } else {
-      setShowWelcomeOverlay(false);
+      // Future rewards
+      // Low opacity + partial grayscale
+      style = {
+        opacity: 0.4,
+        filter: "grayscale(50%)",
+        pointerEvents: "none",
+        cursor: "not-allowed",
+      };
     }
-  }, [points]);
-
-  const handleCloseWelcomeOverlay = () => {
-    setShowWelcomeOverlay(false);
+    return style;
   };
 
-  // -------------------------------------
-  //           RENDER / JSX
-  // -------------------------------------
-
-  // If we haven't loaded user data (playerName or points is null), show minimal text (or spinner).
+  // If we haven't loaded user data (playerName or points is null), show minimal UI or a spinner
   if (playerName === null || points === null) {
     return (
       <div className="main">
         <div className="homebackground" />
-        <h3 style={{ color: "#fff" }}> </h3>
+        <h3 style={{ color: "#fff" }}>Loading...</h3>
       </div>
     );
   }
+  
 
   return (
     <div className="main">
@@ -613,61 +664,62 @@ const Home = () => {
       <div className="top">
         {/* Daily Rewards Overlay */}
         {isDailyRewardsVisible && (
-          <div className="overlay">
-            <div className="overlay-content">
-              <h2>Daily Rewards</h2>
-              <p>Check back daily to keep your streak going and get better rewards!</p>
-              <div className="rewards-grid">
-                {dailyRewards.map((reward) => {
-                  const todayString = new Date().toISOString().split("T")[0];
-                  let opacity = 0.7;
+  <div className="overlay">
+    <div className="overlay-content">
+      {/* Close Icon – separate from the Collect Reward button */}
+      <div className="close-icon-container" onClick={toggleDailyRewards}>
+        <CloseButton />
+      </div>
 
-                  if (reward.date === todayString) {
-                    opacity = reward.claimed ? 0.4 : 1;
-                  } else {
-                    opacity = reward.claimed ? 0.4 : 0.7;
-                  }
+      <h2>Daily Rewards</h2>
+      <p>Check back daily to keep your streak going and get better rewards!</p>
 
-                  return (
-                    <div
-                      className="reward-item"
-                      key={reward.day}
-                      style={{
-                        opacity,
-                        pointerEvents: reward.claimed ? "none" : "auto",
-                        cursor: reward.claimed ? "not-allowed" : "pointer",
-                      }}
-                      onClick={() => {
-                        if (!reward.claimed && reward.date === todayString) {
-                          handleCollectReward();
-                        }
-                      }}
-                    >
-                      <div className="day">
-                        <span>Day {reward.day}</span>
-                      </div>
-                      <div className="reward">
-                        <img
-                          src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735631352/Token_Icon_luv0et.png"
-                          alt="Token Icon"
-                          className="player-icon"
-                        />
-                        <span>{reward.reward} $QKZ</span>
-                      </div>
-                    </div>
-                  );
-                })}
+      <div className="rewards-grid">
+        {dailyRewards.map((reward, index) => {
+          const itemStyle = getRewardItemStyle(reward, index);
+
+          return (
+            <div
+              className="reward-item"
+              key={reward.day}
+              style={itemStyle}
+              onClick={() => {
+                // Only clickable if it's next in line AND date === today
+                if (
+                  index === nextUnclaimedIndex &&
+                  reward.date === todayString &&
+                  !reward.claimed
+                ) {
+                  handleCollectReward();
+                }
+              }}
+            >
+              <div className="day">
+                <span>Day {reward.day}</span>
               </div>
-              <button
-                className={`collect-button ${isTodayRewardClaimed() ? "not-claimable" : "claimable"}`}
-                onClick={handleCollectReward}
-                disabled={isTodayRewardClaimed()}
-              >
-                Collect Reward
-              </button>
-              <CloseButton onClick={toggleDailyRewards} />
+              <div className="reward">
+                <img
+                  src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735631352/Token_Icon_luv0et.png"
+                  alt="Token Icon"
+                  className="player-icon"
+                />
+                <span>{reward.reward} $QKZ</span>
+              </div>
             </div>
-          </div>
+          );
+        })}
+      </div>
+
+      {/* Single "Collect Reward" Button */}
+      <button
+        className={`collect-button ${canCollectToday ? "claimable" : "not-claimable"}`}
+        onClick={handleCollectReward}
+        disabled={!canCollectToday}
+      >
+        Collect Reward
+      </button>
+    </div>
+  </div>
         )}
 
         <div className="playerdetails">
@@ -726,7 +778,7 @@ const Home = () => {
         <div className="tappingareaandprogress">
           {/* Character for tapping */}
           <div
-            className={`tappingarea typeable-character bobbing`}
+            className="tappingarea typeable-character bobbing"
             ref={tappingAreaRef}
             onClick={handleTap}
             style={{ position: "relative", overflow: "hidden" }}

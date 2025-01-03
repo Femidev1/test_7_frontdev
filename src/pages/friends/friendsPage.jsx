@@ -66,12 +66,16 @@ const Friends = () => {
         </div>
         <div className="reward-banner">
           <div className="savelogo">
-            <div className="logo"></div>
+          <img
+              src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735631352/Token_Icon_luv0et.png"
+              alt="Token Icon"
+              className="token-icon"
+          />
           </div>
           <div className="description">
-            <p>+50,000 TOKENS</p>
+            <p>+50,000 $QKZ</p>
             <span>
-              You get 50,000 tokens for inviting your quackies to come play with you.
+              You get 50,000 $QKZ for inviting your quackies to come play with you.
             </span>
           </div>
         </div>
@@ -100,7 +104,7 @@ const Friends = () => {
             );
           })
         ) : (
-          <div className="no-friends">You have no friends yet. Start inviting now!</div>
+          <div className="no-friends">You have no friends yet.</div>
         )}
       </div>
 
