@@ -18,7 +18,9 @@ const Shop = () => {
 
   const API_BASE_URL = "http://localhost:5050/api"; // Base URL for API requests
 
+  // -----------------------------
   // Fetch shop items from the backend
+  // -----------------------------
   useEffect(() => {
     const fetchShopItems = async () => {
       try {
@@ -45,7 +47,9 @@ const Shop = () => {
     }
   }, [telegramId]);
 
+  // -----------------------------
   // Handle clicking outside the selected item and buttons to deselect
+  // -----------------------------
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -64,7 +68,9 @@ const Shop = () => {
     };
   }, []);
 
+  // -----------------------------
   // Handle Purchase Action
+  // -----------------------------
   const handlePurchase = async () => {
     if (!selectedItem || !selectedItem.locked) {
       toast.error("Please select a locked item to purchase.");
@@ -83,9 +89,9 @@ const Shop = () => {
       });
 
       const data = await response.json();
-
       if (response.ok) {
         toast.success("Item purchased successfully!");
+        // Update shop items
         const updatedItems = shopItems.map((item) =>
           item._id === data.item._id ? data.item : item
         );
@@ -102,7 +108,9 @@ const Shop = () => {
     }
   };
 
+  // -----------------------------
   // Handle Upgrade Action
+  // -----------------------------
   const handleUpgrade = async () => {
     if (!selectedItem || selectedItem.locked) {
       toast.error("Please select an unlocked item to upgrade.");
@@ -121,9 +129,9 @@ const Shop = () => {
       });
 
       const data = await response.json();
-
       if (response.ok) {
         toast.success("Item upgraded successfully!");
+        // Update shop items
         const updatedItems = shopItems.map((item) =>
           item._id === data.item._id ? data.item : item
         );
@@ -140,29 +148,97 @@ const Shop = () => {
     }
   };
 
+  // -----------------------------
+  // NEW: Handle Equip Action
+  // -----------------------------
+  const handleEquip = async () => {
+    if (!selectedItem) return;
+    if (selectedItem.type !== "companion") {
+      toast.error("Only companion items can be equipped.");
+      return;
+    }
+    if (selectedItem.locked) {
+      toast.error("Item is locked. Please purchase first.");
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/shop/equip`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: telegramId,
+          itemId: selectedItem._id,
+        }),
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success("Companion equipped successfully!");
+
+        // Update local state: set all companion items to equipped=false, then set chosen to true
+        const updatedItems = shopItems.map((item) => {
+          if (item.type === "companion") {
+            return { ...item, equipped: false };
+          }
+          return item;
+        });
+
+        // Mark newly equipped item
+        const index = updatedItems.findIndex((i) => i._id === selectedItem._id);
+        if (index !== -1) {
+          updatedItems[index] = {
+            ...updatedItems[index],
+            equipped: true,
+            locked: false, // just re-assigning for clarity
+          };
+        }
+
+        setShopItems(updatedItems);
+        setSelectedItem({ ...selectedItem, equipped: true });
+      } else {
+        toast.error(data.message || "Failed to equip companion.");
+      }
+    } catch (error) {
+      console.error("Error equipping companion:", error);
+      toast.error("An error occurred while equipping the companion. Please try again.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // -----------------------------
   // Filter items based on the selected filter category
+  // -----------------------------
   const filteredItems = shopItems.filter((item) =>
     filter === "all" ? true : item.type === filter
   );
 
+  // -----------------------------
+  // RENDER
+  // -----------------------------
   if (loading) {
     return <div className="loading">Loading Shop...</div>;
   }
 
   return (
     <div className="shop-page">
-      <ToastContainer 
-        theme="dark" 
-        className="custom-toast-container" // Added custom class
-        position="top-center" // Optional: Position to top-center
+      <ToastContainer
+        theme="dark"
+        className="custom-toast-container"
+        position="top-center"
       />
       <div className="shopbackground"></div>
       <div className="shop-header">
         <h1 className="header-title">Shop</h1>
       </div>
 
+      {/* Filter Buttons */}
       <div className="filter-bars">
-        {["all", "character", "engine", "drone"].map((type) => (
+        {["all", "companion", "engine", "drone"].map((type) => (
           <button
             key={type}
             className={`filter-button ${filter === type ? "active" : ""}`}
@@ -173,6 +249,7 @@ const Shop = () => {
         ))}
       </div>
 
+      {/* Grid of Items */}
       <div className="item-grid" ref={itemGridRef}>
         {filteredItems.length > 0 ? (
           filteredItems.map((item) => (
@@ -203,8 +280,11 @@ const Shop = () => {
                       + {item.pointsPerCycle} $QKZ/hr
                     </p>
                   )}
+                  {/* Show "Equipped" for equipped items (if you like) */}
+                  {item.equipped && item.type === "companion" && (
+                    <p className="equipped-label">Equipped</p>
+                  )}
                 </div>
-                {/* Removed the item-cost paragraph */}
               </div>
             </div>
           ))
@@ -213,26 +293,40 @@ const Shop = () => {
         )}
       </div>
 
+      {/* Action Buttons */}
       {selectedItem && (
         <div className="cta-buttons" ref={ctaButtonsRef}>
           {selectedItem.locked ? (
+            // PURCHASE button for locked item
             <button
               className="cta-button purchase"
               onClick={handlePurchase}
               disabled={actionLoading}
             >
-              {actionLoading ? "Purchasing..." : `Purchase $QKZ ${selectedItem.baseCost}`}
+              {actionLoading
+                ? "Purchasing..."
+                : `Purchase $QKZ ${selectedItem.baseCost}`}
             </button>
           ) : (
+            // UPGRADE button for unlocked item
             <button
               className="cta-button upgrade"
               onClick={handleUpgrade}
               disabled={actionLoading}
             >
-              {actionLoading ? "Upgrading..." : `Upgrade`}
-              <div className="up">
-                $QKZ {selectedItem.upgradeCost}
-              </div>
+              {actionLoading ? "Upgrading..." : "Upgrade"}
+              <div className="up">$QKZ {selectedItem.upgradeCost}</div>
+            </button>
+          )}
+
+          {/* EQUIP button (only for companions, unlocked) */}
+          {selectedItem.type === "companion" && !selectedItem.locked && (
+            <button
+              className="cta-button equip"
+              onClick={handleEquip}
+              disabled={actionLoading || selectedItem.equipped}
+            >
+              {selectedItem.equipped ? "Equipped" : "Equip"}
             </button>
           )}
         </div>

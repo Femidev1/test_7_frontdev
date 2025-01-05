@@ -48,6 +48,7 @@ const Home = () => {
   const miningDurationMs = 1 * 60 * 1000; // 1 minute
   const refillRate = tapLimit / 60; // e.g., 100 taps in 60s => ~1.66 taps/s
   const tapBatchIntervalMs = 500; // Interval to send batched taps
+  const [characterUrl, setCharacterUrl] = useState("");
 
   // -------------------------------------
   //             LOCAL STATE
@@ -108,6 +109,7 @@ const Home = () => {
         const user = await res.json();
 
         setPoints(user.points ?? 0);
+        setCharacterUrl(user.characterUrl || "");
 
         let displayName = "";
         if (user.username && user.username.trim()) {
@@ -778,26 +780,33 @@ const Home = () => {
         <div className="tappingareaandprogress">
           {/* Character for tapping */}
           <div
-            className="tappingarea typeable-character bobbing"
-            ref={tappingAreaRef}
-            onClick={handleTap}
-            style={{ position: "relative", overflow: "hidden" }}
-          >
-            <div className="tap-container" ref={tapContainerRef}>
-              <img src={duck} alt="Character" />
-            </div>
-            {flyingTaps.map((tap) => (
-              <div
-                key={tap.id}
-                className="flying-tap"
-                style={{ left: tap.x, top: tap.y }}
-                onAnimationEnd={() => handleAnimationEnd(tap.id)}
-              >
-                +1
-              </div>
-            ))}
-          </div>
+  className="tappingarea typeable-character bobbing"
+  ref={tappingAreaRef}
+  onClick={handleTap}
+  style={{ position: "relative", overflow: "hidden" }}
+>
+  <div className="tap-container" ref={tapContainerRef}>
+    <img
+      src={characterUrl || duck}
+      alt="Character"
+      onError={(e) => {
+        e.currentTarget.onerror = null;
+        e.currentTarget.src = duck;
+      }}
+    />
+  </div>
 
+  {flyingTaps.map((tap) => (
+    <div
+      key={tap.id}
+      className="flying-tap"
+      style={{ left: tap.x, top: tap.y }}
+      onAnimationEnd={() => handleAnimationEnd(tap.id)}
+    >
+      +1
+    </div>
+  ))}
+          </div>
           {/* Planet progress bar */}
           <div className="planetprogress">
             <div className="progress-container">

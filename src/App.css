@@ -18,7 +18,10 @@
   justify-items: space-between;
   align-content: space-between;
   gap: none;
+  box-sizing: border-box;
+  overflow-y: scroll;
 }
+
 /* App container to manage layout */
 .app-container {
   display: flex;
@@ -40,4 +43,6 @@
   box-sizing: border-box;
   flex-direction: column;
   padding-bottom: 100px;
+  align-items: center;
+  justify-content: space-between;
 }

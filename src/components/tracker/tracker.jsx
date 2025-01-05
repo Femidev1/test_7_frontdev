@@ -92,7 +92,14 @@ function TapTracker({ telegramId, tapLimit = 100, refillSeconds = 60, pointsPerT
   return (
     <div className="tap-tracker">
       <div className="tapping-area" onClick={handleTap}>
-        <img src={duck} alt="Tap Character" />
+       <img
+        src={characterUrl || "/placeholder.png"}
+        alt="Character"
+        onError={(e) => {
+          e.currentTarget.onerror = null;
+          e.currentTarget.src = "/placeholder.png";
+        }}
+      />
       </div>
       <div className="tap-count-display">
         Taps Left: {Math.floor(tapCount)} / {tapLimit}

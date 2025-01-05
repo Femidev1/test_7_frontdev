@@ -121,7 +121,7 @@ const Quests = () => {
         <div className="header-title">Quests</div>
       </div>
 
-      <div className="filter-barz">
+      <div className="filter-bars">
         <button
           className={`filter-button ${filter === "all" ? "active" : ""}`}
           onClick={() => setFilter("all")}

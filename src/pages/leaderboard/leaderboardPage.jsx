@@ -76,7 +76,7 @@ const Leaderboard = () => {
       </div>
 
       {/* Filter Bar */}
-      <div className="filter-bar">
+      <div className="filter-bars">
         <button
           className={`filter-button ${filter === "all" ? "active" : ""}`}
           onClick={() => setFilter("all")}
