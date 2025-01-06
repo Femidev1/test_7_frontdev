@@ -159,14 +159,18 @@ const Home = () => {
     };
 
     const fetchDailyRewards = async () => {
+      if (!telegramId) return; // Ensure telegramId exists
+
       try {
         const res = await fetch(`http://localhost:5050/api/daily-rewards/${telegramId}`);
         if (!res.ok) throw new Error("Failed to fetch daily rewards");
     
         const data = await res.json();
+        
+        // Ensure rewards are set correctly
         setDailyRewards(data.rewards || []);
     
-        // ✅ Store rewards in localStorage
+        // ✅ Store rewards in localStorage to persist across reloads
         localStorage.setItem(`dailyRewards_${telegramId}`, JSON.stringify(data.rewards || []));
       } catch (err) {
         console.error("Error fetching daily rewards:", err);
@@ -222,6 +226,11 @@ const Home = () => {
   // -------------------------------------
   //        LEVEL PROGRESSION LOGIC
   // -------------------------------------
+  const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
+  const [lastNotifiedLevel, setLastNotifiedLevel] = useState(() => {
+    return parseInt(localStorage.getItem("lastNotifiedLevel") || "0", 10);
+  });
+
   const levels = [
     { min: 0, max: 100 },
     { min: 101, max: 1000 },
@@ -234,6 +243,25 @@ const Home = () => {
     { min: 1000001, max: 10000000 },
     { min: 10000001, max: 100000000001 },
   ];
+
+  useEffect(() => {
+    if (points === null) return;
+  
+    const newLevelIndex = levels.findIndex(
+      (lvl) => points >= lvl.min && points <= lvl.max
+    );
+  
+    if (newLevelIndex !== -1 && newLevelIndex !== currentLevelIndex) {
+      setCurrentLevelIndex(newLevelIndex);
+  
+      // Show the level-up notification ONLY if the user reaches a new level for the first time
+      if (newLevelIndex > lastNotifiedLevel) {
+        toast.success(`🎉 Welcome to Level ${newLevelIndex + 1}!`);
+        setLastNotifiedLevel(newLevelIndex);
+        localStorage.setItem("lastNotifiedLevel", newLevelIndex); // Save it in storage
+      }
+    }
+  }, [points, currentLevelIndex, lastNotifiedLevel]);
 
   const safePoints = points ?? 0;
   const currentLevel =
@@ -555,46 +583,39 @@ const Home = () => {
   // -------------------------------------
   //       DAILY REWARDS LOGIC
   // -------------------------------------
-  const toggleDailyRewards = () => {
+  const toggleDailyRewards = async () => {
+    if (!isDailyRewardsVisible) {
+      // Ensure rewards are fetched BEFORE opening the overlay
+      await fetchDailyRewards(); 
+    }
     setIsDailyRewardsVisible((prev) => !prev);
   };
 
+// Function for handling reward collection
   const handleCollectReward = async () => {
     if (!telegramId) {
       toast.error("Telegram ID not found!");
       return;
     }
-  
+
     try {
       const res = await fetch("http://localhost:5050/api/daily-reward", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ telegramId }),
       });
-  
+
       const data = await res.json();
-  
+
       if (!res.ok) {
         throw new Error(data.message || "Failed to collect daily reward");
       }
-  
-      // ✅ Update Points Immediately
-      setPoints((prev) => (prev !== null ? prev + data.pointsEarned : data.pointsEarned));
+
+      // ✅ Notify user (no state change needed)
       toast.success(data.message || "Reward collected successfully!");
-  
-      // ✅ Store exact timestamp for next claim
-      const nextClaimTimestamp = Date.now() + 86400 * 1000; // 24 hours from now in milliseconds
-      localStorage.setItem(`nextRewardAvailableAt_${telegramId}`, nextClaimTimestamp.toString());
-  
-      // ✅ Calculate time left and update state
-      const timeLeftInSeconds = Math.floor((nextClaimTimestamp - Date.now()) / 1000);
-      setNextRewardCooldown(timeLeftInSeconds);
-  
-      // ✅ Re-fetch daily rewards immediately after claiming
-      fetchDailyRewards();
     } catch (err) {
       console.error("Error collecting daily reward:", err);
-      toast.error(err.message || "An error occurred while collecting your reward.");
+      toast.error(err.message || "You've already collected your reward. Please wait before claiming again.");
     }
   };
 
@@ -771,59 +792,53 @@ const Home = () => {
       <div className="top">
         {/* Daily Rewards Overlay */}
         {isDailyRewardsVisible && (
-  <div className="overlay">
-    <div className="overlay-content">
-      {/* Close Icon – separate from the Collect Reward button */}
-      <div className="close-icon-container" onClick={toggleDailyRewards}>
-        <CloseButton />
-      </div>
-
-      <h2>Daily Rewards</h2>
-      <p>Check back daily to keep your streak going and get better rewards!</p>
-
-      <div className="rewards-grid">
-        {dailyRewards.map((reward, index) => {
-          const itemStyle = getRewardItemStyle(reward, index);
-
-          return (
-            <div
-              className="reward-item"
-              key={reward.day}
-              style={itemStyle}
-              onClick={() => {
-                if (index === nextUnclaimedIndex && reward.date === todayString && !reward.claimed) {
-                  handleCollectReward();
-                }
-              }}
-            >
-              <div className="day">
-                <span>Day {reward.day}</span>
+          <div className="overlay">
+            <div className="overlay-content">
+              {/* Close Button */}
+              <div className="close-icon-container" onClick={toggleDailyRewards}>
+                <CloseButton />
               </div>
-              <div className="reward">
-                <img
-                  src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735631352/Token_Icon_luv0et.png"
-                  alt="Token Icon"
-                  className="player-icon"
-                />
-                <span>{reward.reward} $QKZ</span>
+
+              <h2>Daily Rewards</h2>
+              <p>Check back daily to keep your streak going!</p>
+
+              {/* Reward List (Opacity Logic Remains) */}
+              <div className="rewards-grid">
+                {dailyRewards.map((reward, index) => {
+                  const itemStyle = getRewardItemStyle(reward, index);
+                  return (
+                    <div
+                      className="reward-item"
+                      key={reward.day}
+                      style={itemStyle}
+                      onClick={handleCollectReward} // Click action
+                    >
+                      <div className="day">
+                        <span>Day {reward.day}</span>
+                      </div>
+                      <div className="reward">
+                        <img
+                          src="https://res.cloudinary.com/dhy8xievs/image/upload/v1735631352/Token_Icon_luv0et.png"
+                          alt="Token Icon"
+                          className="player-icon"
+                        />
+                        <span>{reward.reward} $QKZ</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
+
+              {/* Collect Reward Button */}
+              <button 
+                className={`collect-button ${canCollectToday ? "claimable" : "not-claimable"}`} 
+                onClick={handleCollectReward} 
+                disabled={!canCollectToday}
+              >
+                {canCollectToday ? "Collect Reward" : "Not Available Yet"}
+              </button>
             </div>
-          );
-        })}
-      </div>
-
-      {/* Single "Collect Reward" Button */}
-      <button
-        className={`collect-button ${nextRewardCooldown > 0 ? "not-claimable" : "claimable"}`}
-        onClick={handleCollectReward}
-        disabled={nextRewardCooldown > 0}
-      >
-        {nextRewardCooldown > 0
-          ? `Next reward in ${new Date(nextRewardCooldown * 1000).toISOString().substr(11, 8)}`
-          : "Collect Reward"}
-      </button>
-    </div>
-  </div>
+          </div>
         )}
 
         <div className="playerdetails">
