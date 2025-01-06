@@ -75,7 +75,7 @@ const Friends = () => {
           <div className="description">
             <p>+50,000 $QKZ</p>
             <span>
-              You get 50,000 $QKZ for inviting your quackies to come play with you.
+              You get 50,000 $QKZ for inviting your friends to come play as well.
             </span>
           </div>
         </div>

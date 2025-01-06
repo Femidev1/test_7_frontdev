@@ -96,6 +96,9 @@ const Home = () => {
   const [isDailyRewardsVisible, setIsDailyRewardsVisible] = useState(false);
   const [showWelcomeOverlay, setShowWelcomeOverlay] = useState(false);
 
+  //Rewards Timer
+  const [nextRewardCooldown, setNextRewardCooldown] = useState(0);
+
   // -------------------------------------
   //         FETCH USER DATA
   // -------------------------------------
@@ -105,7 +108,19 @@ const Home = () => {
     const fetchUserData = async () => {
       try {
         const res = await fetch(`http://localhost:5050/api/user/${telegramId}`);
-        if (!res.ok) throw new Error("Failed to fetch user data");
+        if (!res.ok) {
+          console.warn("User not found! Resetting all stored data...");
+
+          // Reset all stored data since the user is deleted
+          localStorage.clear();
+
+          // Reset UI states
+          setNextRewardCooldown(0);
+          setDailyRewards([]);
+          setPoints(0);
+          setPlayerName("Unknown");
+          return null; // Explicitly return null to indicate failure
+        }
         const user = await res.json();
 
         setPoints(user.points ?? 0);
@@ -120,8 +135,26 @@ const Home = () => {
           displayName = (fName + " " + lName).trim();
         }
         setPlayerName(displayName || "Unknown");
+
+        return user; // Return the fetched user data
       } catch (err) {
         console.error("Error fetching user data:", err);
+        return null; // Return null in case of an error
+      }
+    };
+
+    const initializeUser = async () => {
+      const user = await fetchUserData();
+
+      // If the user is new (i.e., rewards are empty or reset)
+      if (!user || !user.lastLogin || user.rewardsClaimed === 0) {
+        console.log("New user detected! Resetting rewards & timers...");
+
+        // Clear local storage for rewards and cooldown
+        localStorage.removeItem("nextRewardAvailableAt");
+        localStorage.removeItem("dailyRewards");
+        setNextRewardCooldown(0);
+        setDailyRewards([]);
       }
     };
 
@@ -129,14 +162,18 @@ const Home = () => {
       try {
         const res = await fetch(`http://localhost:5050/api/daily-rewards/${telegramId}`);
         if (!res.ok) throw new Error("Failed to fetch daily rewards");
+    
         const data = await res.json();
         setDailyRewards(data.rewards || []);
+    
+        // ✅ Store rewards in localStorage
+        localStorage.setItem(`dailyRewards_${telegramId}`, JSON.stringify(data.rewards || []));
       } catch (err) {
         console.error("Error fetching daily rewards:", err);
       }
     };
 
-    fetchUserData();
+    initializeUser();
     fetchDailyRewards();
   }, [telegramId]);
 
@@ -527,37 +564,113 @@ const Home = () => {
       toast.error("Telegram ID not found!");
       return;
     }
-
+  
     try {
       const res = await fetch("http://localhost:5050/api/daily-reward", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ telegramId }),
       });
+  
       const data = await res.json();
-
+  
       if (!res.ok) {
         throw new Error(data.message || "Failed to collect daily reward");
       }
-
-      // Increase points on frontend
+  
+      // ✅ Update Points Immediately
       setPoints((prev) => (prev !== null ? prev + data.pointsEarned : data.pointsEarned));
       toast.success(data.message || "Reward collected successfully!");
-
-      // Close daily rewards overlay
-      toggleDailyRewards();
-
-      // Re-fetch daily rewards to get updated status
-      const rewardsRes = await fetch(`http://localhost:5050/api/daily-rewards/${telegramId}`);
-      if (rewardsRes.ok) {
-        const rewardsData = await rewardsRes.json();
-        setDailyRewards(rewardsData.rewards);
-      }
+  
+      // ✅ Store exact timestamp for next claim
+      const nextClaimTimestamp = Date.now() + 86400 * 1000; // 24 hours from now in milliseconds
+      localStorage.setItem(`nextRewardAvailableAt_${telegramId}`, nextClaimTimestamp.toString());
+  
+      // ✅ Calculate time left and update state
+      const timeLeftInSeconds = Math.floor((nextClaimTimestamp - Date.now()) / 1000);
+      setNextRewardCooldown(timeLeftInSeconds);
+  
+      // ✅ Re-fetch daily rewards immediately after claiming
+      fetchDailyRewards();
     } catch (err) {
       console.error("Error collecting daily reward:", err);
       toast.error(err.message || "An error occurred while collecting your reward.");
     }
   };
+
+
+  useEffect(() => {
+    if (!telegramId) return;
+  
+    const storedTime = localStorage.getItem(`nextRewardAvailableAt_${telegramId}`);
+  
+    if (!storedTime || storedTime === "null") {
+      setNextRewardCooldown(0);
+    } else {
+      const nextClaimTime = parseInt(storedTime, 10); // Stored timestamp in ms
+      const currentTime = Date.now(); // Current time in ms
+      const timeRemaining = Math.floor((nextClaimTime - currentTime) / 1000); // Convert ms to seconds
+  
+      if (timeRemaining <= 0) {
+        setNextRewardCooldown(0);
+        localStorage.removeItem(`nextRewardAvailableAt_${telegramId}`);
+      } else {
+        setNextRewardCooldown(timeRemaining);
+      }
+    }
+  }, [telegramId]);
+
+  useEffect(() => {
+    if (nextRewardCooldown > 0) {
+      const interval = setInterval(() => {
+        setNextRewardCooldown((prev) => {
+          if (prev <= 1) {
+            localStorage.removeItem(`nextRewardAvailableAt_${telegramId}`);
+            return 0;
+          }
+  
+          const newCooldown = prev - 1;
+  
+          // ✅ Store the updated countdown every second
+          const nextClaimTimestamp = Date.now() + newCooldown * 1000;
+          localStorage.setItem(`nextRewardAvailableAt_${telegramId}`, nextClaimTimestamp.toString());
+  
+          return newCooldown;
+        });
+      }, 1000);
+  
+      return () => clearInterval(interval);
+    }
+  }, [nextRewardCooldown, telegramId]);
+
+   // ✅ Define fetchDailyRewards at the top
+   const fetchDailyRewards = async () => {
+    try {
+      const res = await fetch(`http://localhost:5050/api/daily-rewards/${telegramId}`);
+      if (!res.ok) throw new Error("Failed to fetch daily rewards");
+
+      const data = await res.json();
+      setDailyRewards(data.rewards || []);
+
+      // ✅ Store rewards in localStorage to persist across page reloads
+      localStorage.setItem(`dailyRewards_${telegramId}`, JSON.stringify(data.rewards || []));
+    } catch (err) {
+      console.error("Error fetching daily rewards:", err);
+    }
+  };
+
+    // ✅ PLACE THIS AFTER USER FETCH LOGIC
+  useEffect(() => {
+    if (!telegramId) return;
+
+    // ✅ Check if rewards are stored in localStorage
+    const storedRewards = localStorage.getItem(`dailyRewards_${telegramId}`);
+    if (storedRewards) {
+      setDailyRewards(JSON.parse(storedRewards));
+    } else {
+      fetchDailyRewards(); // Fetch from backend if not found locally
+    }
+  }, [telegramId]);
 
   // Identify the "next unclaimed" reward index
   const nextUnclaimedIndex = dailyRewards.findIndex((reward) => !reward.claimed);
@@ -581,51 +694,43 @@ const Home = () => {
    * - If index > nextUnclaimedIndex => future
    */
   const getRewardItemStyle = (reward, index) => {
-    // By default
-    let style = {
-      opacity: 0.4,
-      filter: "grayscale(100%)",
-      pointerEvents: "none",
-      cursor: "not-allowed",
-    };
-
+    let style = {};
+  
     if (index < nextUnclaimedIndex) {
-      // Past (already collected)
-      // Low opacity + grayscale, no pointer
-      // (If you want a different style for unclaimed in the past, you can adapt here)
+      // ✅ Already collected (past rewards) → Low opacity, fully grayscale
       style = {
-        opacity: 0.4,
+        opacity: 0.3,
         filter: "grayscale(100%)",
         pointerEvents: "none",
         cursor: "not-allowed",
       };
     } else if (index === nextUnclaimedIndex) {
-      // Next in line
-      // Full opacity + full color
+      // ✅ Next in line (current reward to be claimed) → Full opacity & full color
       style = {
         opacity: 1,
         filter: "grayscale(0%)",
+        transition: "opacity 0.3s ease, filter 0.3s ease",
       };
-      // But pointer events only if it's actually today's reward
+  
+      // If it's today’s reward, allow clicking
       if (reward.date === todayString) {
-        // It's claimable => pointerEvents => auto
         style.pointerEvents = "auto";
         style.cursor = "pointer";
       } else {
-        // Not yet claimable => no pointer
         style.pointerEvents = "none";
         style.cursor = "not-allowed";
       }
     } else {
-      // Future rewards
-      // Low opacity + partial grayscale
+      // ✅ Future rewards → Lower opacity & partial grayscale
       style = {
-        opacity: 0.4,
+        opacity: 0.5,
         filter: "grayscale(50%)",
         pointerEvents: "none",
         cursor: "not-allowed",
+        transition: "opacity 0.3s ease, filter 0.3s ease",
       };
     }
+  
     return style;
   };
 
@@ -686,12 +791,7 @@ const Home = () => {
               key={reward.day}
               style={itemStyle}
               onClick={() => {
-                // Only clickable if it's next in line AND date === today
-                if (
-                  index === nextUnclaimedIndex &&
-                  reward.date === todayString &&
-                  !reward.claimed
-                ) {
+                if (index === nextUnclaimedIndex && reward.date === todayString && !reward.claimed) {
                   handleCollectReward();
                 }
               }}
@@ -714,11 +814,13 @@ const Home = () => {
 
       {/* Single "Collect Reward" Button */}
       <button
-        className={`collect-button ${canCollectToday ? "claimable" : "not-claimable"}`}
+        className={`collect-button ${nextRewardCooldown > 0 ? "not-claimable" : "claimable"}`}
         onClick={handleCollectReward}
-        disabled={!canCollectToday}
+        disabled={nextRewardCooldown > 0}
       >
-        Collect Reward
+        {nextRewardCooldown > 0
+          ? `Next reward in ${new Date(nextRewardCooldown * 1000).toISOString().substr(11, 8)}`
+          : "Collect Reward"}
       </button>
     </div>
   </div>

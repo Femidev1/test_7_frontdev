@@ -158,7 +158,14 @@
     align-items: center;
   }
 
-  .cta-buttons {
+  /* Initially Hide CTA Buttons */
+.cta-buttons {
+  display: none;
+}
+
+
+/* Show CTA Buttons Only When an Item is Selected */
+  .cta-buttons.show {
     position: fixed;
     display: flex;
     flex-direction: column;
@@ -274,3 +281,21 @@
     left: 50% !important; /* Position the container in the center */
     transform: translateX(-50%) !important; /* Adjust the position to truly center */
   }
+
+/* 🔥 Preserve the equipped styles */
+.item-card.equipped {
+  border: 3px solid #ffd700 !important; /* Gold border for equipped items */
+  background: rgba(255, 223, 0, 0.2) !important; /* Soft gold glow */
+  box-shadow: 0 0 15px rgba(255, 223, 0, 0.5) !important; /* Glow effect */
+}
+
+/* Equipped Label */
+.equipped-label {
+  background: gold !important;
+  color: black !important;
+  font-size: 14px !important;
+  font-weight: bold !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  text-transform: uppercase !important;
+}
