@@ -1,4 +1,3 @@
-// src/pages/loadingpage/LoadingPage.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./loadingPage.css";
@@ -7,50 +6,66 @@ function Loading() {
   const navigate = useNavigate();
   const [error, setError] = useState("");
 
-  // We'll no longer track numeric progress; instead, 
-  // we show a spinner for 5 seconds
   useEffect(() => {
     let userFound = false;
 
-    const checkUser = async () => {
+    const createUser = async () => {
       try {
         // Attempt to see if we already have user ID in localStorage
         const savedId = localStorage.getItem("telegramId");
         if (savedId) {
           userFound = true;
         } else {
-          // Otherwise fetch from your backend
-          const res = await fetch("https://test-7-back.vercel.app/api/getMe", {
+          // Fetch Telegram WebApp data
+          const telegram = window.Telegram.WebApp;
+          const userData = telegram.initDataUnsafe.user;
+
+          if (!userData || !userData.id) {
+            setError("Unable to retrieve Telegram user data.");
+            return;
+          }
+
+          const telegramId = userData.id;
+          const username = userData.username || "";
+          const firstName = userData.first_name || "";
+          const lastName = userData.last_name || "";
+          const languageCode = userData.language_code || "";
+          
+          // Create or fetch user in backend
+          const res = await fetch("https://test-7-back.vercel.app/api/user", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ telegramId, username, firstName, lastName, languageCode }),
             credentials: "include",
           });
+
           if (res.ok) {
             const data = await res.json();
-            if (data && data.telegramId) {
-              localStorage.setItem("telegramId", data.telegramId);
+            if (data && data.user && data.user.telegramId) {
+              localStorage.setItem("telegramId", data.user.telegramId);
               userFound = true;
             } else {
-              setError("No user found. Please sign up or log in.");
+              setError("User creation failed.");
             }
           } else {
-            setError("No user found. Please sign up or log in.");
+            setError("User creation failed.");
           }
         }
       } catch (err) {
-        console.error("Error loading user:", err);
+        console.error("Error creating user:", err);
         setError("An error occurred. Please try again later.");
       }
     };
 
-    // 1) Attempt to get user data
-    checkUser();
+    // Call the function to create user
+    createUser();
 
-    // 2) After 5 seconds, if we have an ID, navigate to Home
+    // After 5 seconds, navigate to Home if user is found
     const timerId = setTimeout(() => {
       if (!error && userFound) {
         const id = localStorage.getItem("telegramId");
         if (id) navigate(`/home/${id}`);
       }
-      // If there's an error, we remain on screen so user can see the error
     }, 5000);
 
     return () => clearTimeout(timerId);
@@ -64,7 +79,6 @@ function Loading() {
     );
   }
 
-  // Return the spinner-based loading screen
   return (
     <div className="loading-container">
       <div className="loaderbackground"></div>
