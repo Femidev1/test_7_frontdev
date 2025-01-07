@@ -1,11 +1,10 @@
 // src/App.jsx
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   useLocation,
-  useNavigate,
 } from "react-router-dom";
 import "./App.css";
 
@@ -18,6 +17,8 @@ import Quests from "./pages/quests/questsPage";
 import Friends from "./pages/friends/friendsPage";
 import { UserProvider } from "./contexts/UserContext";
 import GlobalToast from "./components/GlobalToast";
+// Import NotFound if you choose to implement it
+// import NotFound from "./pages/NotFound";
 
 function App() {
   return (
@@ -41,19 +42,6 @@ function App() {
  */
 function AppRoutes() {
   const location = useLocation();
-  const navigate = useNavigate();
-
-  // Track whether we've forced a redirect to "/" yet
-  const [hasRedirected, setHasRedirected] = useState(false);
-
-  useEffect(() => {
-    // On first render, if we are NOT already on "/", then redirect to "/"
-    // so the user always sees the loading screen on a fresh load/refresh
-    if (!hasRedirected && location.pathname !== "/") {
-      navigate("/");
-      setHasRedirected(true);
-    }
-  }, [location, navigate, hasRedirected]);
 
   return (
     <>
@@ -75,8 +63,8 @@ function AppRoutes() {
           <Route path="/shop/:telegramId" element={<Shop />} />
           <Route path="/friends/:telegramId" element={<Friends />} />
 
-          {/* Optional: Redirect any unknown routes to "/" */}
-          <Route path="*" element={<Loading />} />
+          {/* Optional: Redirect any unknown routes to 404 */}
+          {/* <Route path="*" element={<NotFound />} /> */}
         </Routes>
       </div>
 
