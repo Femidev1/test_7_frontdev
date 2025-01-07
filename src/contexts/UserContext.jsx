@@ -3,7 +3,11 @@ import React, { createContext, useState, useEffect } from "react";
 export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
-  const [telegramId, setTelegramId] = useState(() => localStorage.getItem("telegramId") || null);
+  const isLocal = window.location.hostname === "localhost";
+  const fixedTelegramId = "1297266722"; // ✅ Replace with a test ID
+  const [telegramId, setTelegramId] = useState(
+    () => localStorage.getItem("telegramId") || (isLocal ? fixedTelegramId : null)
+  );
   const [points, setPoints] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -14,9 +18,9 @@ export const UserProvider = ({ children }) => {
         setLoading(false);
         return;
       }
-  
+
       try {
-        const response = await fetch(`https://test-7-back.vercel.app/api/user/${telegramId}`);
+        const response = await fetch(`test-7-back.vercel.app/api/user/${telegramId}`);
         if (!response.ok) {
           console.error("Failed to fetch user data:", response.statusText);
           setLoading(false);
@@ -30,11 +34,10 @@ export const UserProvider = ({ children }) => {
         setLoading(false);
       }
     };
-  
+
     fetchUserData();
   }, [telegramId]);
 
-  // Store telegramId in localStorage when it changes
   useEffect(() => {
     if (telegramId) {
       localStorage.setItem("telegramId", telegramId);

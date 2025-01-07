@@ -55,7 +55,7 @@ function TapTracker({ telegramId, tapLimit = 100, refillSeconds = 60, pointsPerT
   
     try {
       // Fetch user data to get current points
-      const userResponse = await fetch(`https://test-7-back.vercel.app/api/user/${telegramId}`);
+      const userResponse = await fetch(`test-7-back.vercel.app/api/user/${telegramId}`);
       if (!userResponse.ok) {
         throw new Error(`Failed to fetch user data. Status: ${userResponse.status}`);
       }
@@ -71,7 +71,7 @@ function TapTracker({ telegramId, tapLimit = 100, refillSeconds = 60, pointsPerT
       const updatedPoints = userData.points + pointsPerTap;
   
       // Send POST request to update points
-      const response = await fetch(`https://test-7-back.vercel.app/api/taps`, {
+      const response = await fetch(`test-7-back.vercel.app/api/taps`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ points: updatedPoints }), // Send points as a number

@@ -45,7 +45,6 @@
   
   .filter-button {
     padding: 8px 18px;
-    background: #333;
     color: #fff;
     border: none;
     cursor: pointer;
@@ -56,15 +55,16 @@
   }
   
   .filter-button.active {
-    background: #555;
+    color: #000;
+    font-weight: bold;
   }
   
   .item-grid {
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    margin-top: 44px;
-    margin-bottom: 84px;
+    margin-top: 2.5rem;
+    margin-bottom: 10rem;
   }
   .item-card {
     backdrop-filter: blur(8px);
@@ -132,30 +132,23 @@
   }
   
   .item-name {
-    font-size: 32px;
+    font-size: 1.75rem;
     font-weight: bold;
     line-height: 1.2;
     margin: none;
   }
 
   .item-upgraded-points{
-    font-size: 20px;
+    font-size: 1rem;
     color: #ffffff;
     font-weight: bold;
   }
   
   .item-level,
   .item-contribution {
-    font-size: 20px;
+    font-size: 1rem;
     color: #ffffff;
     font-weight: bold;
-  }
-
-  .cta-button.equip{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
   }
 
   /* Initially Hide CTA Buttons */
@@ -178,7 +171,7 @@
     align-items: center;
     box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
     position: fixed;
-    bottom: 7.5rem;
+    bottom: 6rem;
     left: 0px;
     gap: 0.75rem;
     height: fit-content;
@@ -293,9 +286,20 @@
 .equipped-label {
   background: gold !important;
   color: black !important;
-  font-size: 14px !important;
+  font-size: 0.75rem !important;
   font-weight: bold !important;
   padding: 4px 8px !important;
   border-radius: 4px !important;
   text-transform: uppercase !important;
 }
+
+
+.cta-button.equip{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 1rem;
+  background-color: #919191;
+}
+

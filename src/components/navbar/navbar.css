@@ -26,8 +26,8 @@
 
 .icon{
     background-color: rgb(255, 255, 255);
-    height: 24px;
-    width: 24px;
+    height: 20px;
+    width: 20px;
 }
 
 .link{
@@ -38,14 +38,14 @@
     box-sizing: border-box;
     color: white;
     text-decoration: none;
-    font-size: 16px;
+    font-size: 0.9rem;
     display: flex;
     align-items: center;
     gap: 0px;
-    font-weight: 500;
+    font-weight: bold;
     margin-bottom: 8px;
 }
 
 .nav-icon{
-    width: 48px;
+    width: 36px;
 }

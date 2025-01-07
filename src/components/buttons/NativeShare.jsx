@@ -8,8 +8,8 @@ const NativeShare = ({ referralLink }) => {
     if (navigator.share) {
       navigator
         .share({
-          title: "Join Me in This Awesome Game!",
-          text: "Check out this game and join me using my referral link:",
+          title: "Quackarz Test Home!",
+          text: "Join the QKZ test group as a test dev",
           url: referralLink,
         })
         .then(() => console.log("Successful share"))

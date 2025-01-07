@@ -9,10 +9,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  height: 100vh; /* Fill full viewport height */
   text-align: center;
-  padding-bottom: 5rem;
   box-sizing: border-box;
+  height: 100vh;
 }
 
 .loadfull{
@@ -20,7 +19,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding-bottom: 10rem;
+  padding-bottom: 2rem;
   box-sizing: border-box;
 }
 
@@ -47,7 +46,6 @@
   border-top-color: #fff; /* White color for the top (the spinning part) */
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
 }
 
 /* Spin animation keyframes */
@@ -71,7 +69,7 @@
 }
 
 .loaderbackground{
-  background: url('https://res.cloudinary.com/dhy8xievs/image/upload/v1735841342/Loading_Screen_lhaumh.png');
+  background: url('https://res.cloudinary.com/dhy8xievs/image/upload/v1736231174/Loading_Screen_lhaumh.png');
   background-size: cover; /* Ensures it covers the full container */
   background-position: center; /* Centers the image */
   background-repeat: no-repeat; /* Prevents tiling */
@@ -82,4 +80,23 @@
   top: 0;
   left: 0;
   z-index: -1;
+}
+
+.text{
+  font-family: "Orbitron", serif;
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+
+.text_icons{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.icons img{
+  width: 44px;
+  height: 44px;
 }

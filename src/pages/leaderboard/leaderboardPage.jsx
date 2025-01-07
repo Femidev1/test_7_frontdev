@@ -32,7 +32,7 @@ const Leaderboard = () => {
 
         setLoading(true);
         // IMPORTANT: This must match your Express route exactly
-        const response = await fetch("https://test-7-back.vercel.app/api/leaderboard");
+        const response = await fetch("test-7-back.vercel.app/api/leaderboard");
         if (!response.ok) throw new Error("Failed to fetch leaderboard data");
         const data = await response.json();
 
@@ -75,28 +75,6 @@ const Leaderboard = () => {
         <h1 className="header-title">Leaderboard</h1>
       </div>
 
-      {/* Filter Bar */}
-      <div className="filter-bars">
-        <button
-          className={`filter-button ${filter === "all" ? "active" : ""}`}
-          onClick={() => setFilter("all")}
-        >
-          All
-        </button>
-        <button
-          className={`filter-button ${filter === "external" ? "active" : ""}`}
-          onClick={() => setFilter("external")}
-        >
-          External
-        </button>
-        <button
-          className={`filter-button ${filter === "in-game" ? "active" : ""}`}
-          onClick={() => setFilter("in-game")}
-        >
-          In-Game
-        </button>
-      </div>
-
       {/* Leaderboard List */}
       <div className="leaderboard-list">
         {leaderboardData
@@ -132,30 +110,6 @@ const Leaderboard = () => {
           ))}
       </div>
 
-      {/* Current User Card (pinned at bottom) */}
-      {currentUser && (
-        <div className="current-user-card">
-          <div className="user-avatar">
-            {currentUser.avatarURL ? (
-              <img src={currentUser.avatarURL} alt={`${currentUser.username}'s avatar`} />
-            ) : (
-              <div className="placeholder-avatar"></div>
-            )}
-          </div>
-          <div className="user-info">
-            <div className="user-name">
-              {currentUser.username || "Your Name"} (You)
-            </div>
-            <div className="user-tokens">{formatNumber(currentUser.points)} $QKZ</div>
-          </div>
-          <div className="user-position">
-            #
-            {leaderboardData.findIndex(
-              (player) => player.telegramId === telegramId
-            ) + 1}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

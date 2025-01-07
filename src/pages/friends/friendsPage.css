@@ -9,10 +9,16 @@ body {
   }
   
   /* Friends Page */
-  .friends-page {
-    padding: 20px;
+
+  .friends-page{
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-content: space-between;
     height: 100%;
   }
+
 
   .countandlogo{
     display: flex;
@@ -27,7 +33,6 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 24px 0px;
     flex-shrink: 0; /* Prevent shrinking */
   }
 
@@ -50,9 +55,9 @@ body {
   
   .reward-banner {
     background-color: #333;
-    padding: 15px;
+    padding: 1rem;
     border-radius: 10px;
-    margin: 40px 0;
+    margin: 1.5rem 0;
   }
   
   .reward-banner p {
@@ -202,7 +207,6 @@ body {
     justify-content: center;
     align-items: center;
     background-color: gold;
-    padding: 16px;
     box-sizing: border-box;
     color: #222;
   }
@@ -222,33 +226,31 @@ body {
     z-index: -1;
   }
 
+  .share-section{
+    position: fixed;
+    width: 90%;
+    box-sizing: border-box;
+    bottom: 6rem;
+    align-self: center;
+    justify-self: center;
+  }
+
+  .no-friends{
+    font-family: "Roboto";
+    font-size: 1.5rem;
+    font-weight: 400;
+    width: 100%;
+    font-weight: 500;
+  }
+
+  .savelogo img{
+    width: 48px;
+    height: 48px;
+  }
+
   .savelogo{
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-  }
-
-  .share-section{
-    position: fixed;
-    bottom: 140px;/* Distance from the bottom of the viewport */
-    left: 50%; /* Position the left edge at the center of the viewport */
-    transform: translateX(-50%); /* Shift the element left by half its width */
-    width: 90%;
-    box-sizing: border-box;
-
-  }
-
-  .no-friends{
-    font-family: "Roboto";
-    font-size: 2rem;
-    font-weight: 400;
-    width: 100%;
-    margin-top: 3rem;
-    font-weight: 500;
-  }
-
-  .savelogo img{
-    width: 60px;
-    height: 60px;
   }

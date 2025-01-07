@@ -42,8 +42,9 @@
     flex: 1; /* Take remaining space and enable scrolling */
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding-bottom: 88px;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    gap: 0.75rem;
   }
 
   .quests-header img {
