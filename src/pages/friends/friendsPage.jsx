@@ -16,7 +16,7 @@ const Friends = () => {
   // Fetch Friends List
   const fetchFriends = async () => {
     try {
-      const response = await fetch(`http://localhost:5050/api/friends/${telegramId}`); // Adjusted API endpoint
+      const response = await fetch(`https://test-7-back.vercel.app/api/friends/${telegramId}`); // Adjusted API endpoint
       if (!response.ok) throw new Error("Failed to fetch friends");
       const data = await response.json();
       setFriends(data.friends);
@@ -29,7 +29,7 @@ const Friends = () => {
   // Fetch Referral Link
   const fetchReferralLink = async () => {
     try {
-      const response = await fetch(`http://localhost:5050/api/referral/${telegramId}`); // Adjusted API endpoint
+      const response = await fetch(`https://test-7-back.vercel.app/api/referral/${telegramId}`); // Adjusted API endpoint
       if (!response.ok) throw new Error("Failed to fetch referral link");
       const data = await response.json();
       setReferralLink(data.referralLink);

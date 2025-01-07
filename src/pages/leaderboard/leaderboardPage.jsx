@@ -32,7 +32,7 @@ const Leaderboard = () => {
 
         setLoading(true);
         // IMPORTANT: This must match your Express route exactly
-        const response = await fetch("http://localhost:5050/api/leaderboard");
+        const response = await fetch("https://test-7-back.vercel.app/api/leaderboard");
         if (!response.ok) throw new Error("Failed to fetch leaderboard data");
         const data = await response.json();
 

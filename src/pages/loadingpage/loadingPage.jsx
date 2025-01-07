@@ -20,7 +20,7 @@ function Loading() {
           userFound = true;
         } else {
           // Otherwise fetch from your backend
-          const res = await fetch("http://localhost:5050/api/getMe", {
+          const res = await fetch("https://test-7-back.vercel.app/api/getMe", {
             credentials: "include",
           });
           if (res.ok) {

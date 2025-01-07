@@ -107,7 +107,7 @@ const Home = () => {
 
     const fetchUserData = async () => {
       try {
-        const res = await fetch(`http://localhost:5050/api/user/${telegramId}`);
+        const res = await fetch(`https://test-7-back.vercel.app/api/user/${telegramId}`);
         if (!res.ok) {
           console.warn("User not found! Resetting all stored data...");
 
@@ -162,7 +162,7 @@ const Home = () => {
       if (!telegramId) return; // Ensure telegramId exists
 
       try {
-        const res = await fetch(`http://localhost:5050/api/daily-rewards/${telegramId}`);
+        const res = await fetch(`https://test-7-back.vercel.app/api/daily-rewards/${telegramId}`);
         if (!res.ok) throw new Error("Failed to fetch daily rewards");
     
         const data = await res.json();
@@ -206,7 +206,7 @@ const Home = () => {
     isUpdatingPoints = true;
 
     try {
-      const res = await fetch(`http://localhost:5050/api/user/${telegramId}`, {
+      const res = await fetch(`https://test-7-back.vercel.app/api/user/${telegramId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ points: increment }),
@@ -404,7 +404,7 @@ const Home = () => {
     timeoutRef.current = setTimeout(async () => {
       clearInterval(intervalRef.current);
       try {
-        const res = await fetch(`http://localhost:5050/api/mine`, {
+        const res = await fetch(`https://test-7-back.vercel.app/api/mine`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ telegramId }),
@@ -465,7 +465,7 @@ const Home = () => {
           timeoutRef.current = setTimeout(async () => {
             clearInterval(intervalRef.current);
             try {
-              const res = await fetch(`http://localhost:5050/api/mine`, {
+              const res = await fetch(`https://test-7-back.vercel.app/api/mine`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ telegramId }),
@@ -553,7 +553,7 @@ const Home = () => {
       if (tapBufferRef.current > 0 && telegramId) {
         const increment = tapBufferRef.current;
         try {
-          const res = await fetch(`http://localhost:5050/api/taps`, {
+          const res = await fetch(`https://test-7-back.vercel.app/api/taps`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ telegramId, increment }),
@@ -599,7 +599,7 @@ const Home = () => {
     }
 
     try {
-      const res = await fetch("http://localhost:5050/api/daily-reward", {
+      const res = await fetch("https://test-7-back.vercel.app/api/daily-reward", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ telegramId }),
@@ -667,7 +667,7 @@ const Home = () => {
    // ✅ Define fetchDailyRewards at the top
    const fetchDailyRewards = async () => {
     try {
-      const res = await fetch(`http://localhost:5050/api/daily-rewards/${telegramId}`);
+      const res = await fetch(`https://test-7-back.vercel.app/api/daily-rewards/${telegramId}`);
       if (!res.ok) throw new Error("Failed to fetch daily rewards");
 
       const data = await res.json();

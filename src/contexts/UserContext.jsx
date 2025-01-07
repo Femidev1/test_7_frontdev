@@ -16,7 +16,7 @@ export const UserProvider = ({ children }) => {
       }
   
       try {
-        const response = await fetch(`http://localhost:5050/api/user/${telegramId}`);
+        const response = await fetch(`https://test-7-back.vercel.app/api/user/${telegramId}`);
         if (!response.ok) {
           console.error("Failed to fetch user data:", response.statusText);
           setLoading(false);

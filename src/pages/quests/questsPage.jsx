@@ -31,7 +31,7 @@ const Quests = () => {
   const fetchQuests = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5050/api/quests?telegramId=${telegramId}&limit=10`
+        `https://test-7-back.vercel.app/api/quests?telegramId=${telegramId}&limit=10`
       );
       if (!response.ok) throw new Error("Failed to fetch quests");
       const data = await response.json();
@@ -57,7 +57,7 @@ const Quests = () => {
 
     try {
       console.log(`Claiming quest with ID: ${questId}`);
-      const response = await fetch(`http://localhost:5050/api/quests/${questId}/claim`, {
+      const response = await fetch(`https://test-7-back.vercel.app/api/quests/${questId}/claim`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ telegramId }),
