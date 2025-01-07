@@ -11,7 +11,7 @@ const AuthPage = () => {
   useEffect(() => {
     const verifyToken = async (token) => {
       try {
-        const response = await fetch(`test-7-back.vercel.app/api/auth/verify-token`, {
+        const response = await fetch(`https://test-7-back.vercel.app/api/auth/verify-token`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

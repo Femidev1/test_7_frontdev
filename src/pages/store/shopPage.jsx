@@ -16,7 +16,7 @@ const Shop = () => {
   const itemGridRef = useRef(null); // Reference to the item grid
   const ctaButtonsRef = useRef(null); // Reference to the CTA buttons container
 
-  const API_BASE_URL = "test-7-back.vercel.app/api"; // Base URL for API requests
+  const API_BASE_URL = "https://test-7-back.vercel.app/api"; // Base URL for API requests
 
   // -----------------------------
   // Fetch shop items from the backend
