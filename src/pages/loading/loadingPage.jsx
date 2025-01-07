@@ -11,27 +11,36 @@ function Loading() {
 
     const createUser = async () => {
       try {
-        // Attempt to see if we already have user ID in localStorage
+        // Ensure Telegram WebApp API is available
+        if (!window.Telegram || !window.Telegram.WebApp) {
+          setError("Telegram WebApp API is not available. Open this app inside Telegram.");
+          return;
+        }
+
+        // Get user data from Telegram WebApp API
+        const telegram = window.Telegram.WebApp;
+        const userData = telegram.initDataUnsafe.user;
+
+        if (!userData || !userData.id) {
+          setError("Unable to retrieve Telegram user data.");
+          return;
+        }
+
+        // Extract user details
+        const telegramId = userData.id.toString();
+        const username = userData.username || "Unknown";
+        const firstName = userData.first_name || "NoFirstName";
+        const lastName = userData.last_name || "NoLastName";
+        const languageCode = userData.language_code || "en";
+
+        console.log("Sending user data:", { telegramId, username, firstName, lastName, languageCode });
+
+        // Check if user already exists in localStorage
         const savedId = localStorage.getItem("telegramId");
         if (savedId) {
           userFound = true;
         } else {
-          // Fetch Telegram WebApp data
-          const telegram = window.Telegram.WebApp;
-          const userData = telegram.initDataUnsafe.user;
-
-          if (!userData || !userData.id) {
-            setError("Unable to retrieve Telegram user data.");
-            return;
-          }
-
-          const telegramId = userData.id;
-          const username = userData.username || "";
-          const firstName = userData.first_name || "";
-          const lastName = userData.last_name || "";
-          const languageCode = userData.language_code || "";
-          
-          // Create or fetch user in backend
+          // Send a request to backend to create the user
           const res = await fetch("https://test-7-back.vercel.app/api/user", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -39,16 +48,14 @@ function Loading() {
             credentials: "include",
           });
 
-          if (res.ok) {
-            const data = await res.json();
-            if (data && data.user && data.user.telegramId) {
-              localStorage.setItem("telegramId", data.user.telegramId);
-              userFound = true;
-            } else {
-              setError("User creation failed.");
-            }
+          const data = await res.json();
+
+          if (res.ok && data?.user?.telegramId) {
+            localStorage.setItem("telegramId", data.user.telegramId);
+            userFound = true;
           } else {
-            setError("User creation failed.");
+            console.error("Server Response:", data);
+            setError(data.message || "User creation failed.");
           }
         }
       } catch (err) {
@@ -57,10 +64,9 @@ function Loading() {
       }
     };
 
-    // Call the function to create user
     createUser();
 
-    // After 5 seconds, navigate to Home if user is found
+    // Navigate to Home after 5 seconds if user is found
     const timerId = setTimeout(() => {
       if (!error && userFound) {
         const id = localStorage.getItem("telegramId");
