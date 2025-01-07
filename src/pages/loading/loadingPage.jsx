@@ -144,8 +144,7 @@ function Loading() {
         </div>
       </div>
       <div className="spinner"></div>
-      {/* Optionally, you can display a progress bar or countdown */}
-      {!imagesLoaded && <div className="spinner">Loading assets...</div>}
+      {/* Removed the redundant spinner to prevent multiple spinners */}
     </div>
   );
 }
