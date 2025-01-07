@@ -8,6 +8,7 @@ function Loading() {
   const [error, setError] = useState("");
   const [userFound, setUserFound] = useState(false);
   const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [timerElapsed, setTimerElapsed] = useState(false);
 
   // List of image URLs to preload
   const imageUrls = [
@@ -34,11 +35,20 @@ function Loading() {
         setImagesLoaded(true);
       } catch (err) {
         console.error("Error preloading images:", err);
-        // You might choose to set an error state here if image loading is critical
+        setError("Failed to load assets. Please try again later.");
       }
     };
 
     preloadImages();
+  }, []);
+
+  // Start a 5-second timer
+  useEffect(() => {
+    const timerId = setTimeout(() => {
+      setTimerElapsed(true);
+    }, 5000); // 5000 milliseconds = 5 seconds
+
+    return () => clearTimeout(timerId);
   }, []);
 
   // Fetch or create user on component mount
@@ -102,15 +112,15 @@ function Loading() {
     createUser();
   }, []);
 
-  // Navigate to Home when user is found and images are loaded
+  // Navigate to Home when user is found, images are loaded, and timer has elapsed
   useEffect(() => {
-    if (userFound && imagesLoaded && !error) {
+    if (userFound && imagesLoaded && timerElapsed && !error) {
       const id = localStorage.getItem("telegramId");
       if (id) {
         navigate(`/home/${id}`);
       }
     }
-  }, [userFound, imagesLoaded, error, navigate]);
+  }, [userFound, imagesLoaded, timerElapsed, error, navigate]);
 
   // Show error if encountered
   if (error) {
@@ -121,15 +131,7 @@ function Loading() {
     );
   }
 
-  // Optionally, show a fallback or a spinner while images are loading
-  if (!imagesLoaded) {
-    return (
-      <div className="loading-container">
-        <div className="spinner">Loading assets...</div>
-      </div>
-    );
-  }
-
+  // Show loading animation while images are loading or timer hasn't elapsed
   return (
     <div className="loading-container">
       <div className="loaderbackground"></div>
@@ -142,6 +144,8 @@ function Loading() {
         </div>
       </div>
       <div className="spinner"></div>
+      {/* Optionally, you can display a progress bar or countdown */}
+      {!imagesLoaded && <div className="spinner">Loading assets...</div>}
     </div>
   );
 }
