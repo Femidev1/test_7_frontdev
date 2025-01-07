@@ -5,7 +5,7 @@ import {
   Routes,
   Route,
   useLocation,
-  useNavigate
+  useNavigate,
 } from "react-router-dom";
 import "./App.css";
 
@@ -27,10 +27,7 @@ function App() {
           {/* Global Toast Container */}
           <GlobalToast theme="dark" />
 
-          {/*
-            Put all routes + your conditional Navbar in a separate component 
-            so we can use location-based logic.
-          */}
+          {/* Routes and Navbar */}
           <AppRoutes />
         </Router>
       </UserProvider>
@@ -74,9 +71,12 @@ function AppRoutes() {
           {/* Quests route with telegramId param */}
           <Route path="/quests/:telegramId" element={<Quests />} />
 
-          {/* Other pages without telegramId */}
+          {/* Shop and Friends routes with telegramId param */}
           <Route path="/shop/:telegramId" element={<Shop />} />
           <Route path="/friends/:telegramId" element={<Friends />} />
+
+          {/* Optional: Redirect any unknown routes to "/" */}
+          <Route path="*" element={<Loading />} />
         </Routes>
       </div>
 
