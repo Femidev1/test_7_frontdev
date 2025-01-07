@@ -1,7 +1,7 @@
 // src/pages/loadingpage/LoadingPage.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./LoadingPage.css";
+import "./loadingPage.css";
 
 function Loading() {
   const navigate = useNavigate();
