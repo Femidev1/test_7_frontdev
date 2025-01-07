@@ -10,7 +10,7 @@ import {
 import "./App.css";
 
 import Navbar from "./components/navbar/navbar";
-import Loading from "./pages/loadingpage/loadingPage";
+import Loading from "./pages/loading/loadingPage";
 import Home from "./pages/home/homePage";
 import Shop from "./pages/store/shopPage";
 import Leaderboard from "./pages/leaderboard/leaderboardPage";
