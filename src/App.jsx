@@ -1,3 +1,4 @@
+// src/App.jsx
 import React from "react";
 import {
   BrowserRouter as Router,
@@ -47,18 +48,18 @@ function AppRoutes() {
           {/* Default route: "/" => shows LoadingPage */}
           <Route path="/" element={<Loading />} />
 
-          {/* Main Home route (No need to pass telegramId) */}
-          <Route path="/home" element={<Home />} />
+          {/* Main Home route with telegramId param */}
+          <Route path="/home/:telegramId" element={<Home />} />
 
-          {/* Leaderboard route */}
-          <Route path="/leaderboard" element={<Leaderboard />} />
+          {/* Leaderboard route with telegramId param */}
+          <Route path="/leaderboard/:telegramId" element={<Leaderboard />} />
 
-          {/* Quests route */}
-          <Route path="/quests" element={<Quests />} />
+          {/* Quests route with telegramId param */}
+          <Route path="/quests/:telegramId" element={<Quests />} />
 
-          {/* Shop and Friends routes */}
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/friends" element={<Friends />} />
+          {/* Shop and Friends routes with telegramId param */}
+          <Route path="/shop/:telegramId" element={<Shop />} />
+          <Route path="/friends/:telegramId" element={<Friends />} />
 
           {/* Optional: Redirect any unknown routes to 404 */}
           {/* <Route path="*" element={<NotFound />} /> */}
