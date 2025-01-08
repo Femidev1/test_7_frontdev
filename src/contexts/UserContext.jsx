@@ -8,7 +8,7 @@ export const UserProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchOrCreateUser = async () => {
       if (!window.Telegram || !window.Telegram.WebApp) {
         console.error("Telegram WebApp API is not available.");
         setLoading(false);
@@ -29,32 +29,46 @@ export const UserProvider = ({ children }) => {
       localStorage.setItem("telegramId", telegramId);
 
       try {
-        const res = await fetch("https://test-7-back.vercel.app/api/user", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            telegramId,
-            username: userData.username || "Unknown",
-            firstName: userData.first_name || "NoFirstName",
-            lastName: userData.last_name || "NoLastName",
-            languageCode: userData.language_code || "en",
-          }),
-        });
+        // Step 1: Try to fetch existing user
+        let res = await fetch(`https://test-7-back.vercel.app/api/user/${telegramId}`);
+        let data = await res.json();
 
-        const data = await res.json();
         if (res.ok) {
-          setPoints(data.user.points || 0);
+          console.log("User exists, fetching data...");
+          setPoints(data.points || 0);
         } else {
-          console.error("Failed to fetch user:", data.message);
+          console.warn("User not found, creating new user...");
+
+          // Step 2: If user does not exist, create it
+          res = await fetch("https://test-7-back.vercel.app/api/user", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              telegramId,
+              username: userData.username || "Unknown",
+              firstName: userData.first_name || "NoFirstName",
+              lastName: userData.last_name || "NoLastName",
+              languageCode: userData.language_code || "en",
+            }),
+          });
+
+          data = await res.json();
+
+          if (res.ok) {
+            console.log("User created successfully!");
+            setPoints(data.user.points || 0);
+          } else {
+            console.error("Failed to create user:", data.message);
+          }
         }
       } catch (error) {
-        console.error("Error fetching user:", error);
+        console.error("Error fetching/creating user:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUser();
+    fetchOrCreateUser();
   }, []);
 
   return (
