@@ -4,6 +4,7 @@ import React, { useState, useEffect, useContext } from "react";
 import "./friendsPage.css";
 import { UserContext } from "../../contexts/UserContext";
 import NativeShare from "../../components/buttons/NativeShare";
+import { toast } from "react-toastify";
 
 const Friends = () => {
   const { telegramId } = useContext(UserContext); // Fetch telegramId from context

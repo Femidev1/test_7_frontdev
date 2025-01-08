@@ -5,6 +5,7 @@ import duck from "../../assets/character1.png";
 import { toast } from "react-toastify";
 import CloseButton from "../../components/icons/closeIcon";
 
+
 /**
  * Utility function to format large numbers into a compact string.
  * E.g., 1021000 becomes "1.02M".

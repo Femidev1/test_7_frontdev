@@ -1,4 +1,3 @@
-// src/App.jsx
 import React from "react";
 import {
   BrowserRouter as Router,
@@ -6,6 +5,8 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
+import { ToastContainer } from "react-toastify"; // ✅ Import Toast
+import "react-toastify/dist/ReactToastify.css"; // ✅ Import styles
 import "./App.css";
 
 import Navbar from "./components/navbar/navbar";
@@ -16,15 +17,24 @@ import Leaderboard from "./pages/leaderboard/leaderboardPage";
 import Quests from "./pages/quests/questsPage";
 import Friends from "./pages/friends/friendsPage";
 import { UserProvider } from "./contexts/UserContext";
-import GlobalToast from "./components/GlobalToast";
 
 function App() {
   return (
     <div className="app-container">
       <UserProvider>
         <Router>
-          {/* Global Toast Container */}
-          <GlobalToast theme="dark" />
+          {/* ✅ Place Global ToastContainer Here */}
+          <ToastContainer
+            position="top-center"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="dark"
+          />
 
           {/* Routes and Navbar */}
           <AppRoutes />
