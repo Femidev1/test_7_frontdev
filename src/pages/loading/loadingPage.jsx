@@ -33,7 +33,9 @@ function Loading() {
     const fetchUser = async () => {
       // Ensure Telegram WebApp API is available
       if (!window.Telegram || !window.Telegram.WebApp) {
-        throw new Error("Telegram WebApp API is not available. Open this app inside Telegram.");
+        throw new Error(
+          "Telegram WebApp API is not available. Open this app inside Telegram."
+        );
       }
 
       // Get user data from Telegram WebApp API
@@ -51,7 +53,13 @@ function Loading() {
       const lastName = userData.last_name || "NoLastName";
       const languageCode = userData.language_code || "en";
 
-      console.log("Sending user data:", { telegramId, username, firstName, lastName, languageCode });
+      console.log("Sending user data:", {
+        telegramId,
+        username,
+        firstName,
+        lastName,
+        languageCode,
+      });
 
       // Check if user already exists in localStorage
       const savedId = localStorage.getItem("telegramId");
@@ -63,7 +71,13 @@ function Loading() {
       const res = await fetch("https://test-7-back.vercel.app/api/user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ telegramId, username, firstName, lastName, languageCode }),
+        body: JSON.stringify({
+          telegramId,
+          username,
+          firstName,
+          lastName,
+          languageCode,
+        }),
         credentials: "include",
       });
 
@@ -80,8 +94,16 @@ function Loading() {
 
     const loadAll = async () => {
       try {
-        // Start all loading tasks concurrently
-        const [loadedImages, telegramId] = await Promise.all([preloadImages(), fetchUser()]);
+        // Create a 5-second delay promise
+        const delay = new Promise((resolve) => setTimeout(resolve, 5000));
+
+        // Start background tasks
+        const preloadAndFetch = Promise.all([preloadImages(), fetchUser()]);
+
+        // Wait for both the delay and the background tasks to complete
+        const [_, results] = await Promise.all([delay, preloadAndFetch]);
+
+        const telegramId = results[1]; // Assuming fetchUser returns telegramId
 
         // Navigate to home with the telegramId
         navigate(`/home/${telegramId}`);
