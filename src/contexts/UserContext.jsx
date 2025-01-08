@@ -8,73 +8,54 @@ export const UserProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Extract token from URL query parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get("token");
+    const fetchUser = async () => {
+      if (!window.Telegram || !window.Telegram.WebApp) {
+        console.error("Telegram WebApp API is not available.");
+        setLoading(false);
+        return;
+      }
 
-    if (!token) {
-      console.warn("No token found in URL.");
-      setLoading(false);
-      return;
-    }
+      const telegram = window.Telegram.WebApp;
+      const userData = telegram.initDataUnsafe?.user;
 
-    // Verify token with backend
-    const verifyToken = async () => {
+      if (!userData || !userData.id) {
+        console.error("Unable to retrieve Telegram user data.");
+        setLoading(false);
+        return;
+      }
+
+      const telegramId = userData.id.toString();
+      setTelegramId(telegramId);
+      localStorage.setItem("telegramId", telegramId);
+
       try {
-        const response = await fetch("https://test-7-back.vercel.app/auth/verify-token", {
+        const res = await fetch("https://test-7-back.vercel.app/api/user", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ token }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            telegramId,
+            username: userData.username || "Unknown",
+            firstName: userData.first_name || "NoFirstName",
+            lastName: userData.last_name || "NoLastName",
+            languageCode: userData.language_code || "en",
+          }),
         });
 
-        if (!response.ok) {
-          console.error("Token verification failed:", response.statusText);
-          setLoading(false);
-          return;
+        const data = await res.json();
+        if (res.ok) {
+          setPoints(data.user.points || 0);
+        } else {
+          console.error("Failed to fetch user:", data.message);
         }
-
-        const data = await response.json();
-        if (!data.telegramId) {
-          console.error("No telegramId returned from verification.");
-          setLoading(false);
-          return;
-        }
-
-        setTelegramId(data.telegramId);
-        localStorage.setItem("telegramId", data.telegramId); // Store for persistence
       } catch (error) {
-        console.error("Error verifying token:", error);
+        console.error("Error fetching user:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    verifyToken();
+    fetchUser();
   }, []);
-
-  // Fetch user data after setting Telegram ID
-  useEffect(() => {
-    if (!telegramId) return;
-
-    const fetchUserData = async () => {
-      try {
-        const response = await fetch(`https://test-7-back.vercel.app/api/user/${telegramId}`);
-        if (!response.ok) {
-          console.error("Failed to fetch user data:", response.statusText);
-          return;
-        }
-
-        const userData = await response.json();
-        setPoints(userData.points || 0);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    };
-
-    fetchUserData();
-  }, [telegramId]);
 
   return (
     <UserContext.Provider value={{ telegramId, setTelegramId, points, setPoints, loading }}>

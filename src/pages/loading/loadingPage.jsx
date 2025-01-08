@@ -1,4 +1,3 @@
-// src/pages/loading/loadingPage.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./loadingPage.css";
@@ -33,9 +32,7 @@ function Loading() {
     const fetchUser = async () => {
       // Ensure Telegram WebApp API is available
       if (!window.Telegram || !window.Telegram.WebApp) {
-        throw new Error(
-          "Telegram WebApp API is not available. Open this app inside Telegram."
-        );
+        throw new Error("Telegram WebApp API is not available. Open this app inside Telegram.");
       }
 
       // Get user data from Telegram WebApp API
@@ -53,7 +50,7 @@ function Loading() {
       const lastName = userData.last_name || "NoLastName";
       const languageCode = userData.language_code || "en";
 
-      console.log("Sending user data:", {
+      console.log("Sending user data to backend:", {
         telegramId,
         username,
         firstName,
@@ -103,7 +100,7 @@ function Loading() {
         // Wait for both the delay and the background tasks to complete
         const [_, results] = await Promise.all([delay, preloadAndFetch]);
 
-        const telegramId = results[1]; // Assuming fetchUser returns telegramId
+        const telegramId = results[1]; // FetchUser returns telegramId
 
         // Navigate to home with the telegramId
         navigate(`/home/${telegramId}`);
@@ -125,7 +122,6 @@ function Loading() {
     );
   }
 
-  // Show loading animation while loading
   return (
     <div className="loading-container">
       <div className="loaderbackground"></div>
