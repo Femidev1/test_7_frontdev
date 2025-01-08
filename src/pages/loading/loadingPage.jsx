@@ -6,9 +6,6 @@ import "./loadingPage.css";
 function Loading() {
   const navigate = useNavigate();
   const [error, setError] = useState("");
-  const [userFound, setUserFound] = useState(false);
-  const [imagesLoaded, setImagesLoaded] = useState(false);
-  const [timerElapsed, setTimerElapsed] = useState(false);
 
   // List of image URLs to preload
   const imageUrls = [
@@ -18,11 +15,10 @@ function Loading() {
     "https://res.cloudinary.com/dhy8xievs/image/upload/v1736231587/Spotify_ymd79k.png",
   ];
 
-  // Preload images
   useEffect(() => {
-    const preloadImages = async () => {
-      try {
-        const promises = imageUrls.map(
+    const preloadImages = () => {
+      return Promise.all(
+        imageUrls.map(
           (url) =>
             new Promise((resolve, reject) => {
               const img = new Image();
@@ -30,97 +26,73 @@ function Loading() {
               img.onload = resolve;
               img.onerror = reject;
             })
-        );
-        await Promise.all(promises);
-        setImagesLoaded(true);
-      } catch (err) {
-        console.error("Error preloading images:", err);
-        setError("Failed to load assets. Please try again later.");
+        )
+      );
+    };
+
+    const fetchUser = async () => {
+      // Ensure Telegram WebApp API is available
+      if (!window.Telegram || !window.Telegram.WebApp) {
+        throw new Error("Telegram WebApp API is not available. Open this app inside Telegram.");
+      }
+
+      // Get user data from Telegram WebApp API
+      const telegram = window.Telegram.WebApp;
+      const userData = telegram.initDataUnsafe?.user;
+
+      if (!userData || !userData.id) {
+        throw new Error("Unable to retrieve Telegram user data.");
+      }
+
+      // Extract user details
+      const telegramId = userData.id.toString();
+      const username = userData.username || "Unknown";
+      const firstName = userData.first_name || "NoFirstName";
+      const lastName = userData.last_name || "NoLastName";
+      const languageCode = userData.language_code || "en";
+
+      console.log("Sending user data:", { telegramId, username, firstName, lastName, languageCode });
+
+      // Check if user already exists in localStorage
+      const savedId = localStorage.getItem("telegramId");
+      if (savedId) {
+        return savedId;
+      }
+
+      // Send a request to backend to create the user
+      const res = await fetch("https://test-7-back.vercel.app/api/user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telegramId, username, firstName, lastName, languageCode }),
+        credentials: "include",
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data?.user?.telegramId) {
+        localStorage.setItem("telegramId", data.user.telegramId);
+        return data.user.telegramId;
+      } else {
+        console.error("Server Response:", data);
+        throw new Error(data.message || "User creation failed.");
       }
     };
 
-    preloadImages();
-  }, []);
-
-  // Start a 5-second timer
-  useEffect(() => {
-    const timerId = setTimeout(() => {
-      setTimerElapsed(true);
-    }, 5000); // 5000 milliseconds = 5 seconds
-
-    return () => clearTimeout(timerId);
-  }, []);
-
-  // Fetch or create user on component mount
-  useEffect(() => {
-    const createUser = async () => {
+    const loadAll = async () => {
       try {
-        // Ensure Telegram WebApp API is available
-        if (!window.Telegram || !window.Telegram.WebApp) {
-          setError("Telegram WebApp API is not available. Open this app inside Telegram.");
-          return;
-        }
+        // Start all loading tasks concurrently
+        const [loadedImages, telegramId] = await Promise.all([preloadImages(), fetchUser()]);
 
-        // Get user data from Telegram WebApp API
-        const telegram = window.Telegram.WebApp;
-        const userData = telegram.initDataUnsafe?.user;
-
-        if (!userData || !userData.id) {
-          setError("Unable to retrieve Telegram user data.");
-          return;
-        }
-
-        // Extract user details
-        const telegramId = userData.id.toString();
-        const username = userData.username || "Unknown";
-        const firstName = userData.first_name || "NoFirstName";
-        const lastName = userData.last_name || "NoLastName";
-        const languageCode = userData.language_code || "en";
-
-        console.log("Sending user data:", { telegramId, username, firstName, lastName, languageCode });
-
-        // Check if user already exists in localStorage
-        const savedId = localStorage.getItem("telegramId");
-        if (savedId) {
-          setUserFound(true);
-          return;
-        }
-
-        // Send a request to backend to create the user
-        const res = await fetch("https://test-7-back.vercel.app/api/user", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ telegramId, username, firstName, lastName, languageCode }),
-          credentials: "include",
-        });
-
-        const data = await res.json();
-
-        if (res.ok && data?.user?.telegramId) {
-          localStorage.setItem("telegramId", data.user.telegramId);
-          setUserFound(true);
-        } else {
-          console.error("Server Response:", data);
-          setError(data.message || "User creation failed.");
-        }
+        // Navigate to home with the telegramId
+        navigate(`/home/${telegramId}`);
       } catch (err) {
-        console.error("Error creating user:", err);
-        setError("An error occurred. Please try again later.");
+        console.error("Loading error:", err);
+        setError(err.message);
       }
     };
 
-    createUser();
-  }, []);
-
-  // Navigate to Home when user is found, images are loaded, and timer has elapsed
-  useEffect(() => {
-    if (userFound && imagesLoaded && timerElapsed && !error) {
-      const id = localStorage.getItem("telegramId");
-      if (id) {
-        navigate(`/home/${id}`);
-      }
-    }
-  }, [userFound, imagesLoaded, timerElapsed, error, navigate]);
+    loadAll();
+  }, [navigate, imageUrls]);
 
   // Show error if encountered
   if (error) {
@@ -131,7 +103,7 @@ function Loading() {
     );
   }
 
-  // Show loading animation while images are loading or timer hasn't elapsed
+  // Show loading animation while loading
   return (
     <div className="loading-container">
       <div className="loaderbackground"></div>
@@ -144,7 +116,6 @@ function Loading() {
         </div>
       </div>
       <div className="spinner"></div>
-      {/* Removed the redundant spinner to prevent multiple spinners */}
     </div>
   );
 }

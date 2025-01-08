@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import "./friendsPage.css";
 import { UserContext } from "../../contexts/UserContext";
-import ShareReferral from "../../components/buttons/ShareReferral";
 import NativeShare from "../../components/buttons/NativeShare";
 
 const Friends = () => {
