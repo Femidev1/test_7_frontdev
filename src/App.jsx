@@ -1,4 +1,3 @@
-// src/App.jsx
 import React from "react";
 import {
   BrowserRouter as Router,
@@ -17,8 +16,6 @@ import Quests from "./pages/quests/questsPage";
 import Friends from "./pages/friends/friendsPage";
 import { UserProvider } from "./contexts/UserContext";
 import GlobalToast from "./components/GlobalToast";
-// Import NotFound if you choose to implement it
-// import NotFound from "./pages/NotFound";
 
 function App() {
   return (
@@ -50,18 +47,18 @@ function AppRoutes() {
           {/* Default route: "/" => shows LoadingPage */}
           <Route path="/" element={<Loading />} />
 
-          {/* Main Home route with telegramId param */}
-          <Route path="/home/:telegramId" element={<Home />} />
+          {/* Main Home route (No need to pass telegramId) */}
+          <Route path="/home" element={<Home />} />
 
-          {/* Leaderboard route with telegramId param */}
-          <Route path="/leaderboard/:telegramId" element={<Leaderboard />} />
+          {/* Leaderboard route */}
+          <Route path="/leaderboard" element={<Leaderboard />} />
 
-          {/* Quests route with telegramId param */}
-          <Route path="/quests/:telegramId" element={<Quests />} />
+          {/* Quests route */}
+          <Route path="/quests" element={<Quests />} />
 
-          {/* Shop and Friends routes with telegramId param */}
-          <Route path="/shop/:telegramId" element={<Shop />} />
-          <Route path="/friends/:telegramId" element={<Friends />} />
+          {/* Shop and Friends routes */}
+          <Route path="/shop" element={<Shop />} />
+          <Route path="/friends" element={<Friends />} />
 
           {/* Optional: Redirect any unknown routes to 404 */}
           {/* <Route path="*" element={<NotFound />} /> */}
