@@ -3,7 +3,7 @@ import { toast } from "react-toastify"; // Ensure toast is imported for error ha
 import "./NativeShare.css"; // Optional for styling
 
 const NativeShare = () => {
-  const botUsername = "@Mehhmehh_bot"; // Replace with your actual bot username
+  const botUsername = "@Official_Quackarz_Bot"; // Replace with your actual bot username
   const botLink = `https://t.me/${botUsername}`; // Telegram bot link
 
   const shareLink = () => {
