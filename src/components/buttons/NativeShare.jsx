@@ -1,10 +1,15 @@
 import React from "react";
-import { toast } from "react-toastify"; // Ensure toast is imported for error handling
-import "./NativeShare.css"; // Optional for styling
+import { toast } from "react-toastify";
+import "./NativeShare.css";
 
 const NativeShare = () => {
-  const botUsername = "@Official_Quackarz_Bot"; // Replace with your actual bot username
-  const botLink = `https://t.me/${botUsername}`; // Telegram bot link
+  // 1. Grab user’s Telegram ID from localStorage
+  const telegramId = localStorage.getItem("telegramId") || "noUserId";
+
+  // 2. Remove the "@" when constructing the bot username in URLs
+  const botUsername = "Official_Quackarz_Bot"; 
+  // 3. Append the referral parameter
+  const botLink = `https://t.me/${botUsername}?start=${telegramId}`;
 
   const shareLink = () => {
     if (navigator.share) {
@@ -12,12 +17,11 @@ const NativeShare = () => {
         .share({
           title: "🚀 Join Quackarz!",
           text: "Tap the link below to start earning in Quackarz on Telegram! 🦆💰",
-          url: botLink, // Use the Telegram bot link
+          url: botLink, // Now includes ?start=<telegramId>
         })
         .then(() => console.log("Successful share"))
         .catch((error) => console.log("Error sharing", error));
     } else {
-      // Fallback for unsupported browsers
       toast.error("Your browser does not support the native sharing feature.");
     }
   };
